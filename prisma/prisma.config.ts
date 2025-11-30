@@ -1,10 +1,17 @@
-// Prisma configuration file for Prisma with MongoDB
-// The DATABASE_URL environment variable is read from .env.local or Vercel environment
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
 
-export const prismaConfig = {
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
+export default defineConfig({
+  // the main entry for your schema
+  schema: 'prisma/schema.prisma',
+  
+  // where migrations should be generated
+  migrations: {
+    path: 'prisma/migrations',
   },
-};
+  
+  // The database URL
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+});
