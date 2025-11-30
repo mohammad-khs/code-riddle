@@ -1,0 +1,23 @@
+[
+  {
+    "solver": "mohammadsolver",
+    "riddles": [
+      {
+        "question": "چیستان ۱",
+        "answer": "چیستان "
+      },
+      {
+        "question": "چیستان ۲",
+        "answer": " چیستان"
+      },
+      {
+        "question": "چیستان ۳",
+        "answer": " چیستان "
+      }
+    ],
+    "prize": {
+      "letter": "آفرین تو بردی",
+      "music": "/music/prize-1764523850380.mpeg"
+    }
+  }
+]

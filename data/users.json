@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": 1764521330271,
+      "username": "mohammad",
+      "password": "d1e7f1a3441952edeca6f3b5707d9de459f468a2d302d460ce94667a188b008f",
+      "userType": "creator"
+    },
+    {
+      "id": 1764521433880,
+      "username": "mohammadsolver",
+      "password": "b1707abeedc4fdd3dcd14386908e96eea44e4e84717c2eee1926430adbabe0b1",
+      "userType": "solver"
+    },
+    {
+      "id": 1764524522132,
+      "username": "mohammad2",
+      "password": "907180ccd2ce2f03a435834d27494becb9ccce519a8da3017f1a0526483339f6",
+      "userType": "solver"
+    }
+  ]
+}
