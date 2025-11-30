@@ -1,6 +1,5 @@
-// Prisma configuration file for Prisma 7 with MongoDB
-// The DATABASE_URL is passed to PrismaClient at runtime
-// See app/api routes for PrismaClient initialization
+// Prisma configuration file for Prisma with MongoDB
+// The DATABASE_URL environment variable is read from .env.local or Vercel environment
 
 export const prismaConfig = {
   datasources: {
