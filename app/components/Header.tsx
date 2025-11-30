@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const [user, setUser] = useState<{ username: string; userType: string } | null>(null);
+  const [user, setUser] = useState<{
+    username: string;
+    userType: string;
+  } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
