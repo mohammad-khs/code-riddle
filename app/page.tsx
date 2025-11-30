@@ -4,49 +4,31 @@ export default function Home() {
   return (
     <div>
       <section className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg p-6">
-        <h1 className="text-2xl font-bold">Welcome to CodeRiddle</h1>
-        <p className="text-slate-700 dark:text-slate-200 mt-2">
-          Create custom riddle sets with a prize letter and optional celebratory
-          music, or solve riddles created for you.
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-green-500">
+          CodeRiddle
+        </h1>
+        <p className="text-lg text-slate-700 dark:text-slate-200 mt-4 leading-relaxed">
+          Challenge your mind with custom riddles. Whether you're a puzzle master crafting brain-bending challenges or a solver ready to test your wits, CodeRiddle is your ultimate riddle platform.
+        </p>
+        <p className="text-slate-600 dark:text-slate-300 mt-3">
+          Create personalized riddle collections with celebratory rewards, or jump into solving riddles crafted just for you. Every correct answer brings you closer to victory.
         </p>
 
-        <div className="flex flex-wrap gap-3 mt-4">
+        <div className="flex flex-wrap gap-3 mt-6">
           <Link
             href="/creator/register"
-            className="inline-block bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
+            className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-md font-medium transition"
           >
             Create Riddles
           </Link>
+
           <Link
-            href="/creator/dashboard"
-            className="inline-block bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded-md"
-          >
-            Creator Dashboard
-          </Link>
-          <Link
-            href="/solver/solve"
-            className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md"
+            href="/solver/login"
+            className="inline-block bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-md font-medium transition"
           >
             Solve Riddles
           </Link>
         </div>
-      </section>
-
-      <section className="mt-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg p-6">
-        <h3 className="font-semibold">How it works</h3>
-        <ol className="list-decimal list-inside mt-2 text-slate-700 dark:text-slate-200">
-          <li>Creator registers and adds as many riddles as they want.</li>
-          <li>
-            Creator sets the prize letter and optionally uploads a music file.
-          </li>
-          <li>
-            Solver registers/logs in and answers the riddles sequentially.
-          </li>
-          <li>
-            If all answers are correct, the prize letter is revealed and music
-            plays.
-          </li>
-        </ol>
       </section>
     </div>
   );

@@ -25,7 +25,7 @@ export default function CreatorRegister() {
       localStorage.setItem("token", j.token || "");
       localStorage.setItem("userType", "creator");
       localStorage.setItem("username", username);
-      window.location.reload();
+      router.push("/creator/dashboard");
     } else {
       setMsg(j.message || "Error");
     }

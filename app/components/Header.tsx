@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const [user, setUser] = useState<{
@@ -9,28 +9,17 @@ export default function Header() {
     userType: string;
   } | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const username = localStorage.getItem("username");
     const userType = localStorage.getItem("userType");
     if (username && userType) {
       setUser({ username, userType });
+    } else {
+      setUser(null);
     }
-
-    // Listen for storage changes (works across tabs and on same tab if using storage event)
-    const handleStorageChange = () => {
-      const updatedUsername = localStorage.getItem("username");
-      const updatedUserType = localStorage.getItem("userType");
-      if (updatedUsername && updatedUserType) {
-        setUser({ username: updatedUsername, userType: updatedUserType });
-      } else {
-        setUser(null);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [pathname]);
 
   function logout() {
     localStorage.removeItem("token");

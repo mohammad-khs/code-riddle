@@ -45,6 +45,12 @@
       "password": "5e17ecbbb6130e03229471578c67e6661ff29917729bcf80a4eb7c79650a8b62",
       "userType": "solver",
       "createdBy": "mohammad2"
+    },
+    {
+      "id": 1764530175582,
+      "username": "mohammad3",
+      "password": "5e17ecbbb6130e03229471578c67e6661ff29917729bcf80a4eb7c79650a8b62",
+      "userType": "creator"
     }
   ]
 }

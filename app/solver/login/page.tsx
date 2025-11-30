@@ -25,7 +25,7 @@ export default function SolverLogin() {
       localStorage.setItem("token", j.token || "");
       localStorage.setItem("userType", "solver");
       localStorage.setItem("username", username);
-      window.location.href = "/solver/solve";
+      router.push("/solver/solve");
     } else {
       setMsg(j.message || "Error");
     }
