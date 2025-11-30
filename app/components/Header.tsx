@@ -16,6 +16,20 @@ export default function Header() {
     if (username && userType) {
       setUser({ username, userType });
     }
+
+    // Listen for storage changes (works across tabs and on same tab if using storage event)
+    const handleStorageChange = () => {
+      const updatedUsername = localStorage.getItem("username");
+      const updatedUserType = localStorage.getItem("userType");
+      if (updatedUsername && updatedUserType) {
+        setUser({ username: updatedUsername, userType: updatedUserType });
+      } else {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   function logout() {
@@ -46,18 +60,21 @@ export default function Header() {
                   Creator Login
                 </Link>
                 <span className="hidden sm:block">|</span>
-                <Link href="/solver/register" className="hover:underline">
-                  Solver Register
-                </Link>
                 <Link href="/solver/login" className="hover:underline">
                   Solver Login
                 </Link>
               </>
-            ) : (
+            ) : user.userType === "creator" ? (
               <>
                 <Link href="/creator/dashboard" className="hover:underline">
                   Dashboard
                 </Link>
+                <Link href="/creator/register-solver" className="hover:underline">
+                  Register Solver
+                </Link>
+              </>
+            ) : (
+              <>
                 <Link href="/solver/solve" className="hover:underline">
                   Solve
                 </Link>

@@ -10,13 +10,20 @@ function hash(pw: string) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { action, username, password, userType } = body;
+  const { action, username, password, userType, creatorUsername } = body;
 
-  // List all solvers (for creator dashboard)
+  // List all solvers for a specific creator
   if (action === "list_solvers") {
+    const creator = body.creator;
+    if (!creator) {
+      return NextResponse.json(
+        { success: false, message: "Creator username required" },
+        { status: 400 }
+      );
+    }
     const store = await readJSON<{ users: any[] }>(USERS_PATH);
     const solvers = (store.users || [])
-      .filter((u) => u.userType === "solver")
+      .filter((u) => u.userType === "solver" && u.createdBy === creator)
       .map((u) => u.username);
     return NextResponse.json({ solvers });
   }
@@ -32,18 +39,44 @@ export async function POST(req: Request) {
   const users = store.users || [];
 
   if (action === "register") {
+    // Solvers can only be registered by creators
+    if (userType === "solver") {
+      if (!creatorUsername) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Creator username required for solver registration",
+          },
+          { status: 400 }
+        );
+      }
+      // Verify that the creator exists
+      const creatorExists = users.find(
+        (u) => u.username === creatorUsername && u.userType === "creator"
+      );
+      if (!creatorExists) {
+        return NextResponse.json(
+          { success: false, message: "Creator not found" },
+          { status: 404 }
+        );
+      }
+    }
+
     if (users.find((u) => u.username === username && u.userType === userType)) {
       return NextResponse.json(
         { success: false, message: "User exists" },
         { status: 400 }
       );
     }
-    const user = {
+    const user: any = {
       id: Date.now(),
       username,
       password: hash(password),
       userType,
     };
+    if (userType === "solver") {
+      user.createdBy = creatorUsername;
+    }
     users.push(user);
     await writeJSON(USERS_PATH, { users });
     return NextResponse.json({

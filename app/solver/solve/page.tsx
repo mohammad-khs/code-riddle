@@ -8,6 +8,7 @@ export default function SolverSolve() {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [result, setResult] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -25,15 +26,37 @@ export default function SolverSolve() {
 
   function submitAnswer(e: any) {
     e.preventDefault();
-    const nextAnswers = [...answers];
-    nextAnswers[index] = currentAnswer;
-    setAnswers(nextAnswers);
-    setCurrentAnswer("");
-    if (index + 1 < (riddles.length || 0)) {
-      setIndex(index + 1);
+    setFeedback("");
+
+    // Check if current answer is correct
+    const currentRiddle = riddles[index];
+    const userAnswer = currentAnswer.trim().toLowerCase();
+    const correctAnswer = (currentRiddle.answer || "")
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    if (userAnswer === correctAnswer) {
+      // Answer is correct
+      const nextAnswers = [...answers];
+      nextAnswers[index] = currentAnswer;
+      setAnswers(nextAnswers);
+      setCurrentAnswer("");
+      setFeedback("✓ Correct!");
+
+      // Move to next riddle or finish
+      setTimeout(() => {
+        if (index + 1 < riddles.length) {
+          setIndex(index + 1);
+          setFeedback("");
+        } else {
+          // All riddles completed
+          finish(nextAnswers);
+        }
+      }, 800);
     } else {
-      // finished
-      finish(nextAnswers);
+      // Answer is incorrect
+      setFeedback("✗ Incorrect. Try again.");
     }
   }
 
@@ -167,9 +190,13 @@ export default function SolverSolve() {
           </button>
         </div>
       </form>
-      {result && !result.success && (
-        <div className="mt-4 text-red-600">
-          Progress: {result.correctCount}/{result.total}. Try again.
+      {feedback && (
+        <div
+          className={`mt-4 text-lg font-semibold ${
+            feedback.startsWith("✓") ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {feedback}
         </div>
       )}
     </section>

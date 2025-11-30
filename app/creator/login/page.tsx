@@ -24,7 +24,8 @@ export default function CreatorLogin() {
     if (j.success) {
       localStorage.setItem("token", j.token || "");
       localStorage.setItem("userType", "creator");
-      router.push("/creator/dashboard");
+      localStorage.setItem("username", username);
+      window.location.reload();
     } else {
       setMsg(j.message || "Error");
     }
@@ -33,8 +34,11 @@ export default function CreatorLogin() {
   return (
     <section className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg p-6 max-w-md mx-auto">
       <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-        Creator Login
+        Login as Creator
       </h2>
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        Manage riddles and create solvers
+      </p>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -43,7 +47,7 @@ export default function CreatorLogin() {
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="username"
+            placeholder="creator username"
             className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
           />
         </div>
@@ -60,8 +64,8 @@ export default function CreatorLogin() {
           />
         </div>
         <div>
-          <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md">
-            Login
+          <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium">
+            Login as Creator
           </button>
         </div>
       </form>

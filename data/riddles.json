@@ -19,5 +19,48 @@
       "letter": "آفرین تو بردی",
       "music": "/music/prize-1764523850380.mpeg"
     }
+  },
+  {
+    "solver": "submohammad1",
+    "riddles": [
+      {
+        "question": "چیستان submohammad1",
+        "answer": "چیستان"
+      },
+      {
+        "question": "چیستان",
+        "answer": "چیستان"
+      }
+    ],
+    "prize": {
+      "letter": "",
+      "music": ""
+    }
+  },
+  {
+    "solver": "submohammad2",
+    "riddles": [
+      {
+        "question": "چیستان submohammad2",
+        "answer": "چیستان "
+      }
+    ],
+    "prize": {
+      "letter": "",
+      "music": ""
+    }
+  },
+  {
+    "solver": "sub2mohammad1",
+    "riddles": [
+      {
+        "question": "چیستان",
+        "answer": "چیستان"
+      }
+    ],
+    "prize": {
+      "letter": "",
+      "music": ""
+    }
   }
 ]

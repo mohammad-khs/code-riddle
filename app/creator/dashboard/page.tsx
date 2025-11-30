@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -11,25 +12,43 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export default function CreatorDashboard() {
+  const router = useRouter();
   const [riddles, setRiddles] = useState<any[]>([]);
   const [prizeLetter, setPrizeLetter] = useState("");
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [solver, setSolver] = useState("");
   const [solvers, setSolvers] = useState<string[]>([]);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // Fetch all solvers for dropdown
+    // Check if user is a creator
+    const userType = localStorage.getItem("userType");
+    if (userType !== "creator") {
+      router.push("/");
+      return;
+    }
+    setAuthorized(true);
+  }, [router]);
+
+  useEffect(() => {
+    if (!authorized) return;
+    const creatorUsername = localStorage.getItem("username");
+    if (!creatorUsername) return;
+    // Fetch solvers created by this creator
     fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "list_solvers" }),
+      body: JSON.stringify({
+        action: "list_solvers",
+        creator: creatorUsername,
+      }),
     })
       .then((r) => r.json())
       .then((d) => {
         setSolvers(d.solvers || []);
       });
-  }, []);
+  }, [authorized]);
 
   useEffect(() => {
     if (!solver) return;
@@ -82,6 +101,10 @@ export default function CreatorDashboard() {
     const j = await res.json();
     if (j.success) setMsg("Saved");
     else setMsg("Error saving");
+  }
+
+  if (!authorized) {
+    return null;
   }
 
   return (
