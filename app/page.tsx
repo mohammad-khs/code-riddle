@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div>
       <section className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg p-6">
-        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-green-500">
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-500 to-green-500">
           CodeRiddle
         </h1>
         <p className="text-lg text-slate-700 dark:text-slate-200 mt-4 leading-relaxed">

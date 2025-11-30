@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("mongodb+srv://mohammad:mohammadkhs123@cluster0.ab2ogm4.mongodb.net/")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  username  String   @unique
+  password  String
+  userType  String  // "creator" or "solver"
+  createdAt DateTime @default(now())
+  createdBy String?  // for solvers, who created them
+  
+  @@map("users")
+}
+
+model RiddleSet {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  solver    String  // username of solver
+  createdBy String  // username of creator
+  prize     Prize?
+  riddles   Riddle[]
+  createdAt DateTime @default(now())
+  
+  @@map("riddle_sets")
+}
+
+model Riddle {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  riddleSet  RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  setId      String   @db.ObjectId
+  question   String
+  answer     String
+  createdAt  DateTime @default(now())
+  
+  @@map("riddles")
+}
+
+model Prize {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  riddleSet RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  setId     String   @unique @db.ObjectId
+  letter    String
+  music     String?   // base64 encoded music data stored in database
+  createdAt DateTime  @default(now())
+  
+  @@map("prizes")
+}
