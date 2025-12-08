@@ -15,6 +15,7 @@ export default function CreatorDashboard() {
   const router = useRouter();
   const [riddles, setRiddles] = useState<any[]>([]);
   const [prizeLetter, setPrizeLetter] = useState("");
+  const [mainMusicFile, setMainMusicFile] = useState<File | null>(null);
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
   const [solver, setSolver] = useState("");
@@ -83,6 +84,11 @@ export default function CreatorDashboard() {
       return;
     }
     setMsg("Saving...");
+    let mainMusicBase64 = undefined;
+    if (mainMusicFile) {
+      mainMusicBase64 = await fileToDataUrl(mainMusicFile);
+    }
+
     let base64 = undefined;
     if (musicFile) {
       base64 = await fileToDataUrl(musicFile);
@@ -96,6 +102,7 @@ export default function CreatorDashboard() {
         riddles,
         prizeLetter,
         prizeMusicBase64: base64,
+        mainMusicBase64: base64,
       }),
     });
     const j = await res.json();
@@ -180,6 +187,20 @@ export default function CreatorDashboard() {
             value={prizeLetter}
             onChange={(e) => setPrizeLetter(e.target.value)}
             className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+          />
+        </div>
+        {/* new */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Main Music (optional)
+          </label>
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={(e) =>
+              setMainMusicFile(e.target.files ? e.target.files[0] : null)
+            }
+            className="mt-2"
           />
         </div>
 

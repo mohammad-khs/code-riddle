@@ -34,7 +34,14 @@ export async function POST(req: Request) {
   const { action } = body;
 
   if (action === "save") {
-    const { solver, riddles, prizeLetter, prizeMusicBase64, createdBy } = body;
+    const { 
+      solver, 
+      riddles, 
+      prizeLetter, 
+      prizeMusicBase64, 
+      mainMusicBase64,
+      createdBy 
+    } = body;
 
     if (!solver)
       return NextResponse.json(
@@ -44,6 +51,7 @@ export async function POST(req: Request) {
 
     // Store music base64 directly in database (or empty string if not provided)
     const prizeMusic = prizeMusicBase64 || "";
+    const mainMusic = mainMusicBase64 || ""; 
 
     try {
       // Find existing RiddleSet
@@ -74,6 +82,7 @@ export async function POST(req: Request) {
               create: {
                 letter: prizeLetter || "",
                 music: prizeMusic,
+                mainMusic: mainMusic, 
               },
             },
           },
@@ -94,6 +103,7 @@ export async function POST(req: Request) {
               create: {
                 letter: prizeLetter || "",
                 music: prizeMusic,
+                mainMusic: mainMusic, 
               },
             },
           },
