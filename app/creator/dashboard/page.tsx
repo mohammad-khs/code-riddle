@@ -102,7 +102,7 @@ export default function CreatorDashboard() {
         riddles,
         prizeLetter,
         prizeMusicBase64: base64,
-        mainMusicBase64: base64,
+        mainMusicBase64,
       }),
     });
     const j = await res.json();

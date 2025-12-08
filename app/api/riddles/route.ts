@@ -34,13 +34,13 @@ export async function POST(req: Request) {
   const { action } = body;
 
   if (action === "save") {
-    const { 
-      solver, 
-      riddles, 
-      prizeLetter, 
-      prizeMusicBase64, 
+    const {
+      solver,
+      riddles,
+      prizeLetter,
+      prizeMusicBase64,
       mainMusicBase64,
-      createdBy 
+      createdBy,
     } = body;
 
     if (!solver)
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     // Store music base64 directly in database (or empty string if not provided)
     const prizeMusic = prizeMusicBase64 || "";
-    const mainMusic = mainMusicBase64 || ""; 
+    const mainMusic = mainMusicBase64 || "";
 
     try {
       // Find existing RiddleSet
@@ -72,6 +72,7 @@ export async function POST(req: Request) {
         await prisma.riddleSet.update({
           where: { id: existingSet.id },
           data: {
+            mainMusic: mainMusic,
             riddles: {
               create: (riddles || []).map((r: any) => ({
                 question: r.question,
@@ -82,7 +83,6 @@ export async function POST(req: Request) {
               create: {
                 letter: prizeLetter || "",
                 music: prizeMusic,
-                mainMusic: mainMusic, 
               },
             },
           },
@@ -93,6 +93,7 @@ export async function POST(req: Request) {
           data: {
             solver,
             createdBy: createdBy || "unknown",
+            mainMusic: mainMusic,
             riddles: {
               create: (riddles || []).map((r: any) => ({
                 question: r.question,
@@ -103,7 +104,6 @@ export async function POST(req: Request) {
               create: {
                 letter: prizeLetter || "",
                 music: prizeMusic,
-                mainMusic: mainMusic, 
               },
             },
           },
