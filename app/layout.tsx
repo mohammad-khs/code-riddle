@@ -26,14 +26,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <Header />
 
-        <main className="app-container py-10">{children}</main>
+        <div className="flex-1 flex items-center justify-center px-6">
+          <main className="max-w-[980px] w-full">{children}</main>
+        </div>
 
         <footer className="border-t border-gray-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300">
-          <div className="app-container py-4">Made with ❤️ — CodeRiddle</div>
+          <div className="max-w-[980px] w-full mx-auto px-6 py-4">
+            Made with ❤️ — CodeRiddle
+          </div>
         </footer>
       </body>
     </html>

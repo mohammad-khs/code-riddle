@@ -21,15 +21,6 @@
   }
 }
 
-/* small utility for consistent max width */
-.app-container {
-  max-width: 980px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
 @media (max-width: 520px) {
   .nav-row {
     flex-direction: column;

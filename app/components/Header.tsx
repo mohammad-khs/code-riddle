@@ -33,7 +33,7 @@ export default function Header() {
 
   return (
     <header className="bg-white/80 dark:bg-slate-800/70 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
-      <div className="app-container flex items-center justify-between py-3">
+      <div className="max-w-[980px] mx-auto px-6 flex items-center justify-between py-3">
         <Link
           href="/"
           className="font-bold text-lg text-slate-900 dark:text-slate-100"
@@ -122,10 +122,10 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu - slides down */}
+      {/* Mobile Menu - overlay */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <nav className="app-container flex flex-col gap-3 text-sm text-slate-700 dark:text-slate-200 py-4">
+        <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 absolute z-50 w-full left-0">
+          <nav className="max-w-[980px] mx-auto px-6 flex flex-col gap-3 text-sm text-slate-700 dark:text-slate-200 py-4">
             {!user ? (
               <>
                 <Link
