@@ -51,6 +51,6 @@ model Prize {
   letter    String
   music     String?   // base64 encoded music data stored in database
   createdAt DateTime  @default(now())
-  
+  backgroundImage String?  // new
   @@map("prizes")
 }

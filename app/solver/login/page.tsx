@@ -6,9 +6,11 @@ export default function SolverLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [isloading, setIsloading] = useState(false);
   const router = useRouter();
 
   async function submit(e: any) {
+    setIsloading(true);
     e.preventDefault();
     const res = await fetch("/api/auth", {
       method: "POST",
@@ -25,9 +27,11 @@ export default function SolverLogin() {
       localStorage.setItem("token", j.token || "");
       localStorage.setItem("userType", "solver");
       localStorage.setItem("username", username);
+      setIsloading(false);
       router.push("/solver/solve");
     } else {
       setMsg(j.message || "Error");
+      setIsloading(false);
     }
   }
 
@@ -36,9 +40,6 @@ export default function SolverLogin() {
       <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
         Login as Solver
       </h2>
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-        Solve riddles created for you
-      </p>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -64,7 +65,10 @@ export default function SolverLogin() {
           />
         </div>
         <div>
-          <button className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium">
+          <button
+            disabled={isloading}
+            className="w-full disabled:opacity-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium"
+          >
             Login as Solver
           </button>
         </div>

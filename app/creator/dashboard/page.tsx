@@ -17,6 +17,9 @@ export default function CreatorDashboard() {
   const [prizeLetter, setPrizeLetter] = useState("");
   const [mainMusicFile, setMainMusicFile] = useState<File | null>(null);
   const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
+    null
+  );
   const [msg, setMsg] = useState("");
   const [solver, setSolver] = useState("");
   const [solvers, setSolvers] = useState<string[]>([]);
@@ -93,6 +96,11 @@ export default function CreatorDashboard() {
     if (musicFile) {
       base64 = await fileToDataUrl(musicFile);
     }
+
+    let backgroundImageBase64 = undefined;
+    if (backgroundImageFile) {
+      backgroundImageBase64 = await fileToDataUrl(backgroundImageFile);
+    }
     const res = await fetch("/api/riddles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -103,6 +111,7 @@ export default function CreatorDashboard() {
         prizeLetter,
         prizeMusicBase64: base64,
         mainMusicBase64,
+        backgroundImageBase64,
       }),
     });
     const j = await res.json();
@@ -186,7 +195,7 @@ export default function CreatorDashboard() {
           <textarea
             value={prizeLetter}
             onChange={(e) => setPrizeLetter(e.target.value)}
-            className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+            className="mt-1 min-h-12 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
           />
         </div>
         {/* new */}
@@ -213,6 +222,20 @@ export default function CreatorDashboard() {
             accept="audio/*"
             onChange={(e) =>
               setMusicFile(e.target.files ? e.target.files[0] : null)
+            }
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Background Image (optional)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setBackgroundImageFile(e.target.files ? e.target.files[0] : null)
             }
             className="mt-2"
           />

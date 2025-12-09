@@ -6,10 +6,12 @@ export default function CreatorLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [isloading, setIsLoading] = useState(false);
   const router = useRouter();
 
   async function submit(e: any) {
     e.preventDefault();
+    setIsLoading(true);
     const res = await fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -25,9 +27,11 @@ export default function CreatorLogin() {
       localStorage.setItem("token", j.token || "");
       localStorage.setItem("userType", "creator");
       localStorage.setItem("username", username);
+      setIsLoading(false);
       router.push("/creator/dashboard");
     } else {
       setMsg(j.message || "Error");
+      setIsLoading(false);
     }
   }
 
@@ -36,9 +40,6 @@ export default function CreatorLogin() {
       <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
         Login as Creator
       </h2>
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-        Manage riddles and create solvers
-      </p>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -64,7 +65,10 @@ export default function CreatorLogin() {
           />
         </div>
         <div>
-          <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium">
+          <button
+            disabled={isloading}
+            className="w-full disabled:opacity-50 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium"
+          >
             Login as Creator
           </button>
         </div>

@@ -1,4 +1,5 @@
 "use client";
+import { PauseIcon, PlayIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function SolverSolve() {
@@ -13,6 +14,7 @@ export default function SolverSolve() {
   const [mainMusic, setMainMusic] = useState("");
   const [isMainPlaying, setIsMainPlaying] = useState(false);
   const mainAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [answerLoading, setAnswerLoading] = useState(false);
 
   useEffect(() => {
     // Get solver username from localStorage
@@ -31,7 +33,7 @@ export default function SolverSolve() {
   function submitAnswer(e: any) {
     e.preventDefault();
     setFeedback("");
-
+    setAnswerLoading(true);
     // Check if current answer is correct
     const currentRiddle = riddles[index];
     const userAnswer = currentAnswer.trim().toLowerCase();
@@ -39,14 +41,18 @@ export default function SolverSolve() {
       .toString()
       .trim()
       .toLowerCase();
-
+    if (userAnswer === "") {
+      setFeedback("✗ چیزی ننوشتی ");
+      setAnswerLoading(false);
+      return;
+    }
     if (userAnswer === correctAnswer) {
       // Answer is correct
       const nextAnswers = [...answers];
       nextAnswers[index] = currentAnswer;
       setAnswers(nextAnswers);
       setCurrentAnswer("");
-      setFeedback("✓ Correct!");
+      setFeedback("✓ درسته");
 
       // Move to next riddle or finish
       setTimeout(() => {
@@ -57,10 +63,12 @@ export default function SolverSolve() {
           // All riddles completed
           finish(nextAnswers);
         }
+        setAnswerLoading(false);
       }, 800);
     } else {
       // Answer is incorrect
-      setFeedback("✗ Incorrect. Try again.");
+      setFeedback("✗ اشتباس، دوباره امتحان کن.");
+      setAnswerLoading(false);
     }
   }
 
@@ -145,12 +153,23 @@ export default function SolverSolve() {
 
   if (result && result.success) {
     return (
-      <div className="relative">
-        <section className="max-w-3xl mx-auto bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-            Congratulations!
-          </h2>
-          <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-200 text-lg">
+      <div
+        style={
+          result.prize.backgroundImage
+            ? {
+                backgroundImage: `url(${result.prize.backgroundImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {}
+        }
+        className="h-svh flex justify-center items-center fixed top-0 left-0 w-full"
+      >
+        <section className="max-w-3xl mx-6 sm:mx-auto overflow-y-scroll h-[500px] bg-black/30 backdrop-blur-sm dark:border-slate-700 rounded-lg p-6">
+          <div
+            dir="rtl"
+            className="whitespace-pre-wrap text-slate-700 dark:text-slate-200 text-lg"
+          >
             {result.prize.letter}
           </div>
         </section>
@@ -165,35 +184,15 @@ export default function SolverSolve() {
           <div className="fixed right-4 bottom-4 z-50">
             <button
               onClick={togglePlay}
-              className="flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow"
+              className="flex items-center justify-center w-14 h-14 rounded-full bg-black/30 backdrop-blur-sm shadow"
             >
               <span className="sr-only">
                 {isPlaying ? "Pause music" : "Play music"}
               </span>
               {isPlaying ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-slate-900 dark:text-slate-100"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 9v6m4-6v6"
-                  />
-                </svg>
+                <PauseIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
               ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-slate-900 dark:text-slate-100"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M5 3v18l15-9L5 3z" />
-                </svg>
+                <PlayIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
               )}
             </button>
           </div>
@@ -203,16 +202,20 @@ export default function SolverSolve() {
   }
 
   if (!riddles || riddles.length === 0) {
-    return <div className="max-w-3xl mx-auto p-6">No riddles available.</div>;
+    return (
+      <div dir="rtl" className="max-w-3xl mx-auto p-6 text-center text-2xl">
+        صبر کن 😊
+      </div>
+    );
   }
 
   const item = riddles[index];
 
   return (
-    <div className="relative">
+    <div className="relative" dir="rtl">
       <section className="max-w-3xl mx-auto bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
         <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-          Riddle {index + 1} of {riddles.length}
+          سوال {index + 1}
         </h2>
         <div className="mb-4 text-slate-700 dark:text-slate-200">
           {item.question}
@@ -221,12 +224,16 @@ export default function SolverSolve() {
           <input
             value={currentAnswer}
             onChange={(e) => setCurrentAnswer(e.target.value)}
-            placeholder="Your answer"
-            className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+            placeholder="پاسخ خود را اینجا وارد کنید"
+            disabled={answerLoading}
+            className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 disabled:opacity-50"
           />
           <div>
-            <button className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md">
-              Submit
+            <button
+              disabled={answerLoading}
+              className="bg-sky-500 disabled:bg-sky-300/50 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
+            >
+              ثبت پاسخ
             </button>
           </div>
         </form>
@@ -255,29 +262,9 @@ export default function SolverSolve() {
               {isMainPlaying ? "Pause main music" : "Play main music"}
             </span>
             {isMainPlaying ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-slate-900 dark:text-slate-100"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 9v6m4-6v6"
-                />
-              </svg>
+              <PauseIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
             ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-slate-900 dark:text-slate-100"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M5 3v18l15-9L5 3z" />
-              </svg>
+              <PlayIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
             )}
           </button>
         </div>

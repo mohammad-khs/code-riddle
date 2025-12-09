@@ -1,9 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-export default function Header() {
+interface HeaderProps {
+  isPrize: boolean;
+}
+
+const Header: FC<HeaderProps> = ({ isPrize = false }) => {
   const [user, setUser] = useState<{
     username: string;
     userType: string;
@@ -102,7 +106,7 @@ export default function Header() {
           </nav>
 
           {user && (
-            <div className="flex items-center gap-3 text-sm border-l border-gray-200 dark:border-slate-700 pl-3">
+            <div className="flex items-center gap-3 text-sm border-l border-gray-200  pl-3">
               <div className="text-right">
                 <div className="font-medium text-slate-900 dark:text-slate-100">
                   {user.username}
@@ -124,7 +128,7 @@ export default function Header() {
 
       {/* Mobile Menu - overlay */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 absolute z-50 w-full left-0">
+        <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/95 absolute z-50 w-full left-0">
           <nav className="max-w-[980px] mx-auto px-6 flex flex-col gap-3 text-sm text-slate-700 dark:text-slate-200 py-4">
             {!user ? (
               <>
@@ -142,7 +146,7 @@ export default function Header() {
                 >
                   Creator Login
                 </Link>
-                <div className="border-t border-gray-200 dark:border-slate-700 my-2"></div>
+                <div className="border-t border-gray-200 my-2"></div>
                 <Link
                   href="/solver/login"
                   className="hover:underline block py-2"
@@ -182,7 +186,7 @@ export default function Header() {
 
             {user && (
               <>
-                <div className="border-t border-gray-200 dark:border-slate-700 my-2"></div>
+                <div className="border-t border-gray-200  my-2"></div>
                 <div className="py-2">
                   <div className="font-medium text-slate-900 dark:text-slate-100">
                     {user.username}
@@ -204,4 +208,6 @@ export default function Header() {
       )}
     </header>
   );
-}
+};
+
+export default Header;

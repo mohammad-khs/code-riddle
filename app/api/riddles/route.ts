@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       prizeLetter,
       prizeMusicBase64,
       mainMusicBase64,
+      backgroundImageBase64,
       createdBy,
     } = body;
 
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
     // Store music base64 directly in database (or empty string if not provided)
     const prizeMusic = prizeMusicBase64 || "";
     const mainMusic = mainMusicBase64 || "";
+    const backgroundImage = backgroundImageBase64 || "";
 
     try {
       // Find existing RiddleSet
@@ -83,6 +85,7 @@ export async function POST(req: Request) {
               create: {
                 letter: prizeLetter || "",
                 music: prizeMusic,
+                backgroundImage: backgroundImage,
               },
             },
           },
@@ -104,6 +107,7 @@ export async function POST(req: Request) {
               create: {
                 letter: prizeLetter || "",
                 music: prizeMusic,
+                backgroundImage: backgroundImage,
               },
             },
           },
