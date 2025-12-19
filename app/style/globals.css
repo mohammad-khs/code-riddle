@@ -21,6 +21,13 @@
   }
 }
 
+/* @theme{
+
+
+  --color-frzn-blue: #3b82f6;
+
+} */
+
 @media (max-width: 520px) {
   .nav-row {
     flex-direction: column;
@@ -43,5 +50,25 @@
   .btn {
     width: 100%;
     text-align: center;
+  }
+}
+
+/* Scrollbar */
+@media (hover: hover) {
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 50px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+    cursor: grab;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    cursor: grabbing;
   }
 }

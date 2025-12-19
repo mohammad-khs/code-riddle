@@ -1,0 +1,147 @@
+.background-pattern {
+  /* Checks Checks Checks Checks*/
+  /* background-image: repeating-conic-gradient(#1a2b43 0% 25%, #400089 0% 50%);
+  background-position: 0 0, 35px 35px;
+  background-size: 70px 70px;
+  background-color: #400089; */
+
+  /* Diamonds Diamonds Diamonds Diamonds */
+  /* background: repeating-conic-gradient(
+    from 45deg,
+    #1a2b43 0% 25%,
+    #400089 0% 50%
+  );
+  background-size: 59px 59px;
+  background-color: #400089; */
+
+  /* Grid Grid Grid Grid */
+  /* background-image: linear-gradient(#1a2b43 3px, transparent 3px),
+    linear-gradient(to right, #1a2b43 3px, transparent 3px);
+  background-size: 35px 35px;
+  background-color: #400089; */
+
+  /* Cross Dots Cross Dots Cross Dots Cross Dots */
+  /* background-image: radial-gradient(#1a2b43 2px, transparent 2px),
+    radial-gradient(#1a2b43 2px, transparent 2px);
+  background-size: 35px 35px;
+  background-position: 0 0, 17.5px 17.5px;
+  background-color: #400089; */
+
+  /* Crosses Crosses Crosses Crosses */
+  /* background: radial-gradient(
+        circle,
+        transparent 20%,
+        #400089 20%,
+        #400089 80%,
+        transparent 80%,
+        transparent
+      )
+      0% 0% / 70px 70px,
+    radial-gradient(
+        circle,
+        transparent 20%,
+        #400089 20%,
+        #400089 80%,
+        transparent 80%,
+        transparent
+      )
+      35px 35px / 70px 70px,
+    linear-gradient(#1a2b43 3px, transparent 3px) 0px -1.5px / 35px 35px,
+    linear-gradient(90deg, #1a2b43 3px, #400089 3px) -1.5px 0px / 35px 35px #400089;
+  background-size: 70px 70px, 70px 70px, 35px 35px, 35px 35px;
+  background-color: #400089; */
+
+  /* Snakes Snakes Snakes Snakes */
+  /* background: conic-gradient(at 62.5% 12.5%, #1a2b43 25%, #0000 0)
+      calc(35px / -8) calc(35px / 2),
+    conic-gradient(at 62.5% 12.5%, #1a2b43 25%, #0000 0) calc(-3 * 35px / 8)
+      calc(35px / 4),
+    conic-gradient(at 87.5% 62.5%, #1a2b43 25%, #0000 0) calc(3 * 35px / 8)
+      calc(35px / 4),
+    conic-gradient(at 87.5% 62.5%, #1a2b43 25%, #0000 0) calc(35px / -8) 0,
+    conic-gradient(at 25% 12.5%, #1a2b43 25%, #0000 0) 0 calc(35px / -4),
+    conic-gradient(at 25% 12.5%, #1a2b43 25%, #0000 0) calc(35px / -4) 0,
+    conic-gradient(at 87.5% 87.5%, #1a2b43 25%, #0000 0) calc(35px / 8) 0
+      #400089;
+  background-size: 35px 35px; */
+
+  /* Hypnotic v1 Hypnotic v1 Hypnotic v1 Hypnotic v1 */
+  /* background: radial-gradient(
+      50% 50% at 100% 0,
+      #400089 0% 5%,
+      #1a2b43 6% 15%,
+      #400089 16% 25%,
+      #1a2b43 26% 35%,
+      #400089 36% 45%,
+      #1a2b43 46% 55%,
+      #400089 56% 65%,
+      #1a2b43 66% 75%,
+      #400089 76% 85%,
+      #1a2b43 86% 95%,
+      #0000 96%
+    ),
+    radial-gradient(
+      50% 50% at 0 100%,
+      #400089 0% 5%,
+      #1a2b43 6% 15%,
+      #400089 16% 25%,
+      #1a2b43 26% 35%,
+      #400089 36% 45%,
+      #1a2b43 46% 55%,
+      #400089 56% 65%,
+      #1a2b43 66% 75%,
+      #400089 76% 85%,
+      #1a2b43 86% 95%,
+      #0000 96%
+    ),
+    radial-gradient(
+      50% 50%,
+      #400089 0% 5%,
+      #1a2b43 6% 15%,
+      #400089 16% 25%,
+      #1a2b43 26% 35%,
+      #400089 36% 45%,
+      #1a2b43 46% 55%,
+      #400089 56% 65%,
+      #1a2b43 66% 75%,
+      #400089 76% 85%,
+      #1a2b43 86% 95%,
+      #0000 96%
+    ),
+    radial-gradient(
+        50% 50%,
+        #400089 0% 5%,
+        #1a2b43 6% 15%,
+        #400089 16% 25%,
+        #1a2b43 26% 35%,
+        #400089 36% 45%,
+        #1a2b43 46% 55%,
+        #400089 56% 65%,
+        #1a2b43 66% 75%,
+        #400089 76% 85%,
+        #1a2b43 86% 95%,
+        #0000 96%
+      )
+      35px 35px;
+  background-size: 70px 70px;
+  background-color: #400089; */
+
+  /* Hearts Hearts Hearts Hearts */
+  /* background: radial-gradient(at 80% 80%, #1a2b43 25.4%, #0000 26%),
+    radial-gradient(at 20% 80%, #1a2b43 25.4%, #0000 26%),
+    conic-gradient(from -45deg at 50% 41%, #1a2b43 90deg, #400089 0) 17.5px 0;
+  background-size: 35px 35px; */
+
+  /* Water Drop Water Drop Water Drop Water Drop */
+  background-image: radial-gradient(circle at center center, #1a2b43, #400089),
+    repeating-radial-gradient(
+      circle at center center,
+      #1a2b43,
+      #1a2b43,
+      35px,
+      transparent 70px,
+      transparent 35px
+    );
+  background-blend-mode: multiply;
+  background-color: #400089;
+}
