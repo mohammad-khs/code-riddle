@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import SolverSelector from "@/app/components/ui/creator/dashboard/SolverSelector";
+import RiddleList from "@/app/components/ui/creator/dashboard/RiddleList";
+import PrizeInput from "@/app/components/ui/creator/dashboard/PrizeInput";
+import MediaUploadSection from "@/app/components/ui/creator/dashboard/media-selector/MediaUploadSection";
+import SaveButton from "@/app/components/ui/creator/dashboard/SaveButton";
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -124,133 +129,38 @@ export default function CreatorDashboard() {
   }
 
   return (
-    <section className="max-w-3xl mx-auto bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
+    <section className="max-w-3xl mx-auto bg-white dark:bg-black/35 backdrop-blur-md border dark:border-slate-700 rounded-lg p-6">
       <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
         Creator Dashboard
       </h2>
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Assign to Solver
-          </label>
-          <select
-            value={solver}
-            onChange={(e) => setSolver(e.target.value)}
-            className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
-          >
-            <option value="">Select solver...</option>
-            {solvers.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-        {riddles.map((r, i) => (
-          <div
-            key={i}
-            className="bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-md p-4"
-          >
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Question
-              </label>
-              <input
-                value={r.question}
-                onChange={(e) => updateRiddle(i, "question", e.target.value)}
-                className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
-              />
-            </div>
-            <div className="mt-2">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Answer
-              </label>
-              <input
-                value={r.answer}
-                onChange={(e) => updateRiddle(i, "answer", e.target.value)}
-                className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
-              />
-            </div>
-            <div className="mt-3">
-              <button onClick={() => removeRiddle(i)} className="text-red-600">
-                Remove
-              </button>
-            </div>
-          </div>
-        ))}
+        <SolverSelector
+          solvers={solvers}
+          selectedSolver={solver}
+          onChange={setSolver}
+        />
 
-        <div>
-          <button
-            onClick={addRiddle}
-            className="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-3 py-1 rounded-md"
-          >
-            Add Riddle
-          </button>
-        </div>
+        {solver && (
+          <>
+            <RiddleList
+              riddle={riddles}
+              onUpdate={updateRiddle}
+              onRemove={removeRiddle}
+              onAdd={addRiddle}
+            />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Prize Letter
-          </label>
-          <textarea
-            value={prizeLetter}
-            onChange={(e) => setPrizeLetter(e.target.value)}
-            className="mt-1 min-h-12 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
-          />
-        </div>
-        {/* new */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Main Music (optional)
-          </label>
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={(e) =>
-              setMainMusicFile(e.target.files ? e.target.files[0] : null)
-            }
-            className="mt-2"
-          />
-        </div>
+            <PrizeInput prizeLetter={prizeLetter} onUpdate={setPrizeLetter} />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Prize Music (optional)
-          </label>
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={(e) =>
-              setMusicFile(e.target.files ? e.target.files[0] : null)
-            }
-            className="mt-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Background Image (optional)
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setBackgroundImageFile(e.target.files ? e.target.files[0] : null)
-            }
-            className="mt-2"
-          />
-        </div>
-
-        <div>
-          <button
-            onClick={save}
-            className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
-          >
-            Save All
-          </button>
-        </div>
-        {msg && (
-          <div className="mt-2 text-slate-700 dark:text-slate-200">{msg}</div>
+            <MediaUploadSection
+              mainMusicFile={mainMusicFile}
+              musicFile={musicFile}
+              backgroundImageFile={backgroundImageFile}
+              onMainMusicChange={setMainMusicFile}
+              onPrizeMusicChange={setMusicFile}
+              onBackgroundImageChange={setBackgroundImageFile}
+            />
+            <SaveButton onSave={save} message={msg} />
+          </>
         )}
       </div>
     </section>
