@@ -89,7 +89,7 @@ export default function SolverSolve() {
     // when main music is set, try to autoplay
     if (mainMusic && mainAudioRef.current) {
       try {
-        mainAudioRef.current.src = mainMusic;
+        mainAudioRef.current.src = `${mainMusic}`;
         mainAudioRef.current.loop = true;
         const p = mainAudioRef.current.play();
         if (p && typeof p.then === "function") {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { createClient } from "@/utils/supabase/server";
 
 const prisma = new PrismaClient();
 
@@ -18,6 +19,38 @@ export async function GET(req: Request) {
         prize: true,
       },
     });
+    const supabase = createClient();
+    if (riddleSet?.mainMusic) {
+      try {
+        const { data } = await supabase.storage
+          .from("uploads")
+          .createSignedUrl(riddleSet.mainMusic, 3600);
+        riddleSet.mainMusic = data?.signedUrl || riddleSet.mainMusic;
+      } catch (e) {
+        console.error("Error generating signed URL for mainMusic:", e);
+      }
+    }
+    if (riddleSet?.prize?.music) {
+      try {
+        const { data } = await supabase.storage
+          .from("uploads")
+          .createSignedUrl(riddleSet.prize.music, 3600);
+        riddleSet.prize.music = data?.signedUrl || riddleSet.prize.music;
+      } catch (e) {
+        console.error("Error generating signed URL for prize music:", e);
+      }
+    }
+    if (riddleSet?.prize?.backgroundImage) {
+      try {
+        const { data } = await supabase.storage
+          .from("uploads")
+          .createSignedUrl(riddleSet.prize.backgroundImage, 3600);
+        riddleSet.prize.backgroundImage =
+          data?.signedUrl || riddleSet.prize.backgroundImage;
+      } catch (e) {
+        console.error("Error generating signed URL for background image:", e);
+      }
+    }
     return NextResponse.json(riddleSet || {});
   } catch (error) {
     console.error("Error fetching riddles:", error);
@@ -28,7 +61,7 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/riddles { action: "save", solver, riddles, prizeLetter, prizeMusicBase64 }
+// POST /api/riddles { action: "save", solver, riddles, prizeLetter, prizeMusicUrl, mainMusicUrl, backgroundImageUrl }
 export async function POST(req: Request) {
   const body = await req.json();
   const { action } = body;
@@ -38,9 +71,9 @@ export async function POST(req: Request) {
       solver,
       riddles,
       prizeLetter,
-      prizeMusicBase64,
-      mainMusicBase64,
-      backgroundImageBase64,
+      prizeMusicPath,
+      mainMusicPath,
+      backgroundImagePath,
       createdBy,
     } = body;
 
@@ -50,10 +83,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
 
-    // Store music base64 directly in database (or empty string if not provided)
-    const prizeMusic = prizeMusicBase64 || "";
-    const mainMusic = mainMusicBase64 || "";
-    const backgroundImage = backgroundImageBase64 || "";
+    // Store URLs directly in database (or empty string if not provided)
+    const prizeMusic = prizeMusicPath || "";
+    const mainMusic = mainMusicPath || "";
+    const backgroundImage = backgroundImagePath || "";
 
     try {
       // Find existing RiddleSet

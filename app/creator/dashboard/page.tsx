@@ -7,13 +7,21 @@ import PrizeInput from "@/app/components/ui/creator/dashboard/PrizeInput";
 import MediaUploadSection from "@/app/components/ui/creator/dashboard/media-selector/MediaUploadSection";
 import SaveButton from "@/app/components/ui/creator/dashboard/SaveButton";
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+async function uploadFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
   });
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.message || "Upload failed");
+  }
+
+  return result.path;
 }
 
 export default function CreatorDashboard() {
@@ -92,19 +100,19 @@ export default function CreatorDashboard() {
       return;
     }
     setMsg("Saving...");
-    let mainMusicBase64 = undefined;
+    let mainMusicPath = undefined;
     if (mainMusicFile) {
-      mainMusicBase64 = await fileToDataUrl(mainMusicFile);
+      mainMusicPath = await uploadFile(mainMusicFile);
     }
 
-    let base64 = undefined;
+    let prizeMusicPath = undefined;
     if (musicFile) {
-      base64 = await fileToDataUrl(musicFile);
+      prizeMusicPath = await uploadFile(musicFile);
     }
 
-    let backgroundImageBase64 = undefined;
+    let backgroundImagePath = undefined;
     if (backgroundImageFile) {
-      backgroundImageBase64 = await fileToDataUrl(backgroundImageFile);
+      backgroundImagePath = await uploadFile(backgroundImageFile);
     }
     const res = await fetch("/api/riddles", {
       method: "POST",
@@ -114,9 +122,9 @@ export default function CreatorDashboard() {
         solver,
         riddles,
         prizeLetter,
-        prizeMusicBase64: base64,
-        mainMusicBase64,
-        backgroundImageBase64,
+        prizeMusicPath,
+        mainMusicPath,
+        backgroundImagePath,
       }),
     });
     const j = await res.json();

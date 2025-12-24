@@ -42,8 +42,8 @@ const NavBar: FC<NavBarProps> = ({ isPrize = false }) => {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="dark:bg-black/35 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
-      <div className="max-w-[1080px] mx-auto md:px-0 px-6 flex items-center justify-between py-3">
+    <nav className="dark:bg-black/35 px-6 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+      <div className="max-w-[1080px] mx-auto md:px-0 flex items-center justify-between py-3">
         <Logo />
         <HamburgerButton
           isOpen={isMenuOpen}

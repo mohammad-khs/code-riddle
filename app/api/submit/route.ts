@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { createClient } from "@/utils/supabase/server";
 
 const prisma = new PrismaClient();
 
@@ -50,9 +51,32 @@ export async function POST(req: Request) {
     }
 
     if (correctCount === total) {
+      const supabase = createClient();
+      const prize = riddleSet.prize || {};
+      if ((prize as any).music) {
+        try {
+          const { data } = await supabase.storage
+            .from("uploads")
+            .createSignedUrl((prize as any).music, 3600);
+          (prize as any).music = data?.signedUrl || (prize as any).music;
+        } catch (e) {
+          console.error("Error generating signed URL for prize music:", e);
+        }
+      }
+      if ((prize as any).backgroundImage) {
+        try {
+          const { data } = await supabase.storage
+            .from("uploads")
+            .createSignedUrl((prize as any).backgroundImage, 3600);
+          (prize as any).backgroundImage =
+            data?.signedUrl || (prize as any).backgroundImage;
+        } catch (e) {
+          console.error("Error generating signed URL for background image:", e);
+        }
+      }
       return NextResponse.json({
         success: true,
-        prize: riddleSet.prize || {},
+        prize,
       });
     }
 

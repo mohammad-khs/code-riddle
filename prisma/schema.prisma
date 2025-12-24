@@ -49,7 +49,7 @@ model Prize {
   riddleSet RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
   setId     String   @unique @db.ObjectId
   letter    String
-  music     String?   // base64 encoded music data stored in database
+  music     String?   // URL to uploaded music file
   createdAt DateTime  @default(now())
   backgroundImage String?  // new
   @@map("prizes")
