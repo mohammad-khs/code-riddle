@@ -6,22 +6,16 @@ import RiddleList from "@/app/components/ui/creator/dashboard/RiddleList";
 import PrizeInput from "@/app/components/ui/creator/dashboard/PrizeInput";
 import MediaUploadSection from "@/app/components/ui/creator/dashboard/media-selector/MediaUploadSection";
 import SaveButton from "@/app/components/ui/creator/dashboard/SaveButton";
+import { uploadFileDirectly } from "@/utils/supabase/direct-upload";
 
 async function uploadFile(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
+  const result = await uploadFileDirectly(file);
 
-  const response = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
-
-  const result = await response.json();
   if (!result.success) {
     throw new Error(result.message || "Upload failed");
   }
 
-  return result.path;
+  return result.path || "";
 }
 
 export default function CreatorDashboard() {
@@ -31,7 +25,7 @@ export default function CreatorDashboard() {
   const [mainMusicFile, setMainMusicFile] = useState<File | null>(null);
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(
-    null
+    null,
   );
   const [msg, setMsg] = useState("");
   const [solver, setSolver] = useState("");
