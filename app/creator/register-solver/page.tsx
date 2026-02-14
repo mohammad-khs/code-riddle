@@ -82,9 +82,9 @@ export default function RegisterSolver() {
     <AuthForm
       title="Register Solver"
       subtitle={
-        <p>
+        <>
           Creating solver for: <strong>{creatorUsername}</strong>
-        </p>
+        </>
       }
       username={username}
       setUsername={setUsername}
