@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
+import { AuthPostBody } from "@/types/auth";
 
-const prisma = new PrismaClient({
-});
+const prisma = new PrismaClient();
 
 function hash(pw: string) {
   return crypto.createHash("sha256").update(pw).digest("hex");
@@ -12,7 +12,13 @@ function hash(pw: string) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { action, username, password, userType, creatorUsername } = body;
+    const {
+      action,
+      username,
+      password,
+      userType,
+      creatorUsername,
+    }: AuthPostBody = body;
 
     // List all solvers for a specific creator
     if (action === "list_solvers") {
@@ -20,7 +26,7 @@ export async function POST(req: Request) {
       if (!creator) {
         return NextResponse.json(
           { success: false, message: "Creator username required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const solvers = await prisma.user.findMany({
@@ -40,7 +46,7 @@ export async function POST(req: Request) {
     if (!username || !password || !userType) {
       return NextResponse.json(
         { success: false, message: "Missing fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +59,7 @@ export async function POST(req: Request) {
               success: false,
               message: "Creator username required for solver registration",
             },
-            { status: 400 }
+            { status: 400 },
           );
         }
         // Verify that the creator exists
@@ -63,7 +69,7 @@ export async function POST(req: Request) {
         if (!creatorExists || creatorExists.userType !== "creator") {
           return NextResponse.json(
             { success: false, message: "Creator not found" },
-            { status: 404 }
+            { status: 404 },
           );
         }
       }
@@ -75,7 +81,7 @@ export async function POST(req: Request) {
       if (existingUser && existingUser.userType === userType) {
         return NextResponse.json(
           { success: false, message: "User exists" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -102,17 +108,17 @@ export async function POST(req: Request) {
       if (!user || user.userType !== userType) {
         return NextResponse.json(
           { success: false, message: "User not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
       if (user.password !== hash(password)) {
         return NextResponse.json(
           { success: false, message: "Invalid credentials" },
-          { status: 401 }
+          { status: 401 },
         );
       }
-
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       const token = crypto
         .createHash("sha1")
         .update(`${username}:${userType}:${Date.now()}`)
@@ -123,17 +129,18 @@ export async function POST(req: Request) {
         token,
         user: { id: user.id, username, userType },
       });
+     
     }
 
     return NextResponse.json(
       { success: false, message: "Unknown action" },
-      { status: 400 }
+      { status: 400 },
     );
   } catch (error) {
     console.error("Auth error:", error);
     return NextResponse.json(
       { success: false, message: "Server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
