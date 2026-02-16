@@ -9,6 +9,8 @@ type AuthFormProps = {
   setUsername: (value: string) => void;
   password: string;
   setPassword: (value: string) => void;
+  creatorUsername?: string;
+  setCreatorUsername?: (value: string) => void;
   onSubmit: (e: FormEvent) => Promise<void>;
   buttonText: string;
   message: string;
@@ -24,6 +26,8 @@ export default function AuthForm({
   setUsername,
   password,
   setPassword,
+  creatorUsername,
+  setCreatorUsername,
   onSubmit,
   buttonText,
   message,
@@ -50,6 +54,22 @@ export default function AuthForm({
       )}
 
       <form onSubmit={onSubmit} className="space-y-4">
+        {setCreatorUsername && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Creator Username
+            </label>
+            <input
+              type="text"
+              value={creatorUsername || ""}
+              onChange={(e) => setCreatorUsername(e.target.value)}
+              placeholder="creator username"
+              required
+              className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Username
@@ -86,7 +106,7 @@ export default function AuthForm({
               buttonClasses[buttonColor]
             } disabled:hover:${buttonClasses[buttonColor]?.replace(
               "hover:",
-              ""
+              "",
             )} text-white px-4 py-2 rounded-md font-medium transition`}
           >
             {isLoading ? "Loading..." : buttonText}

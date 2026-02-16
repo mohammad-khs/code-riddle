@@ -12,9 +12,11 @@
     "@prisma/client": "^6.19.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "argon2": "^0.44.0",
+    "crypto": "^1.0.1",
     "lucide-react": "^0.556.0",
     "next": "^16.0.7",
-    "prisma": "^6.19.0",
+    "prisma": "^6.19.2",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },

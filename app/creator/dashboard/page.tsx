@@ -52,7 +52,7 @@ export default function CreatorDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "list_solvers",
-        creator: creatorUsername,
+        creatorUsername: creatorUsername,
       }),
     })
       .then((r) => r.json())
@@ -93,6 +93,11 @@ export default function CreatorDashboard() {
       setMsg("Please select a solver");
       return;
     }
+    const creatorUsername = localStorage.getItem("username");
+    if (!creatorUsername) {
+      setMsg("Creator username not found");
+      return;
+    }
     setMsg("Saving...");
     let mainMusicPath = undefined;
     if (mainMusicFile) {
@@ -114,6 +119,7 @@ export default function CreatorDashboard() {
       body: JSON.stringify({
         action: "save",
         solver,
+        creatorUsername,
         riddles,
         prizeLetter,
         prizeMusicPath,
@@ -123,7 +129,7 @@ export default function CreatorDashboard() {
     });
     const j = await res.json();
     if (j.success) setMsg("Saved");
-    else setMsg("Error saving");
+    else setMsg(j.message || "Error saving");
   }
 
   if (!authorized) {

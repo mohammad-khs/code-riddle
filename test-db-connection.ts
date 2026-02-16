@@ -1,13 +1,5 @@
 // Quick test script to verify MongoDB connection
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+import { prisma } from "./lib/prisma";
 
 async function testConnection() {
   try {
@@ -25,7 +17,8 @@ async function testConnection() {
       data: {
         username: `test_creator_${Date.now()}`,
         password: "hashed_password_here",
-        userType: "creator",
+        role: "creator",
+        creatorId: null, // Creators have null creatorId
       },
     });
     console.log("✅ User created successfully:");

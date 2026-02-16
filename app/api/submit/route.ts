@@ -1,40 +1,62 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 
-const prisma = new PrismaClient();
+interface Prize {
+  id: string;
+  setId: string;
+  letter: string;
+  music: string | null;
+  backgroundImage: string | null;
+  createdAt: Date;
+}
 
 // POST /api/submit { solver, answers }
 export async function POST(req: Request) {
   const body = await req.json();
   const { solver, answers } = body;
 
-  if (!solver)
+  if (!solver) {
     return NextResponse.json(
-      { success: false, message: "Solver required" },
-      { status: 400 }
+      { success: false, message: "solver username required" },
+      { status: 400 },
     );
+  }
 
-  if (!Array.isArray(answers))
+  if (!Array.isArray(answers)) {
     return NextResponse.json(
       { success: false, message: "Answers required" },
-      { status: 400 }
+      { status: 400 },
     );
+  }
 
   try {
+    // Find solver by username
+    const solverUser = await prisma.user.findFirst({
+      where: { username: solver, role: "solver" },
+    });
+
+    if (!solverUser) {
+      return NextResponse.json(
+        { success: false, message: "Solver not found" },
+        { status: 404 },
+      );
+    }
+
     const riddleSet = await prisma.riddleSet.findFirst({
-      where: { solver },
+      where: { solverId: solverUser.id },
       include: {
         riddles: true,
         prize: true,
       },
     });
 
-    if (!riddleSet)
+    if (!riddleSet) {
       return NextResponse.json(
         { success: false, message: "No riddles for this solver" },
-        { status: 404 }
+        { status: 404 },
       );
+    }
 
     const riddles = riddleSet.riddles || [];
     const total = riddles.length;
@@ -52,28 +74,37 @@ export async function POST(req: Request) {
 
     if (correctCount === total) {
       const supabase = createClient();
-      const prize = riddleSet.prize || {};
-      if ((prize as any).music) {
+      const prize: Prize = riddleSet.prize || {
+        id: "",
+        setId: riddleSet.id,
+        letter: "",
+        music: null,
+        backgroundImage: null,
+        createdAt: new Date(),
+      };
+
+      if (prize.music) {
         try {
           const { data } = await supabase.storage
             .from("uploads")
-            .createSignedUrl((prize as any).music, 3600);
-          (prize as any).music = data?.signedUrl || (prize as any).music;
+            .createSignedUrl(prize.music, 3600);
+          prize.music = data?.signedUrl || prize.music;
         } catch (e) {
           console.error("Error generating signed URL for prize music:", e);
         }
       }
-      if ((prize as any).backgroundImage) {
+
+      if (prize.backgroundImage) {
         try {
           const { data } = await supabase.storage
             .from("uploads")
-            .createSignedUrl((prize as any).backgroundImage, 3600);
-          (prize as any).backgroundImage =
-            data?.signedUrl || (prize as any).backgroundImage;
+            .createSignedUrl(prize.backgroundImage, 3600);
+          prize.backgroundImage = data?.signedUrl || prize.backgroundImage;
         } catch (e) {
           console.error("Error generating signed URL for background image:", e);
         }
       }
+
       return NextResponse.json({
         success: true,
         prize,
@@ -85,7 +116,7 @@ export async function POST(req: Request) {
     console.error("Error submitting answers:", error);
     return NextResponse.json(
       { success: false, message: "Error submitting answers" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
