@@ -12,13 +12,13 @@ export async function POST(req: Request) {
   if (!solver)
     return NextResponse.json(
       { success: false, message: "Solver required" },
-      { status: 400 }
+      { status: 400 },
     );
 
   if (!Array.isArray(answers))
     return NextResponse.json(
       { success: false, message: "Answers required" },
-      { status: 400 }
+      { status: 400 },
     );
 
   try {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     if (!riddleSet)
       return NextResponse.json(
         { success: false, message: "No riddles for this solver" },
-        { status: 404 }
+        { status: 404 },
       );
 
     const riddles = riddleSet.riddles || [];
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
           const { data } = await supabase.storage
             .from("uploads")
             .createSignedUrl((prize as any).music, 3600);
+          ////////////////////////////////////////////////////////////////////////
           (prize as any).music = data?.signedUrl || (prize as any).music;
         } catch (e) {
           console.error("Error generating signed URL for prize music:", e);
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
     console.error("Error submitting answers:", error);
     return NextResponse.json(
       { success: false, message: "Error submitting answers" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

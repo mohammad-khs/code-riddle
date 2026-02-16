@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { createClient } from "@/utils/supabase/server";
+import { deleteFileFromSupabase } from "@/utils/supabase/server-delete";
 
 const prisma = new PrismaClient();
 
@@ -56,7 +57,7 @@ export async function GET(req: Request) {
     console.error("Error fetching riddles:", error);
     return NextResponse.json(
       { success: false, message: "Error fetching riddles" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
     if (!solver)
       return NextResponse.json(
         { success: false, message: "Solver required" },
-        { status: 400 }
+        { status: 400 },
       );
 
     // Store URLs directly in database (or empty string if not provided)
@@ -92,7 +93,38 @@ export async function POST(req: Request) {
       // Find existing RiddleSet
       const existingSet = await prisma.riddleSet.findFirst({
         where: { solver },
+        include: { prize: true },
       });
+
+      // Delete old files if they're being replaced
+      if (existingSet) {
+        // Delete old mainMusic if it's changing
+        if (
+          existingSet.mainMusic &&
+          existingSet.mainMusic !== mainMusic &&
+          mainMusic
+        ) {
+          await deleteFileFromSupabase(existingSet.mainMusic);
+        }
+
+        // Delete old prize files if they're changing
+        if (existingSet.prize) {
+          if (
+            existingSet.prize.music &&
+            existingSet.prize.music !== prizeMusic &&
+            prizeMusic
+          ) {
+            await deleteFileFromSupabase(existingSet.prize.music);
+          }
+          if (
+            existingSet.prize.backgroundImage &&
+            existingSet.prize.backgroundImage !== backgroundImage &&
+            backgroundImage
+          ) {
+            await deleteFileFromSupabase(existingSet.prize.backgroundImage);
+          }
+        }
+      }
 
       if (existingSet) {
         // Delete existing riddles and prize
@@ -152,13 +184,66 @@ export async function POST(req: Request) {
       console.error("Error saving riddles:", error);
       return NextResponse.json(
         { success: false, message: "Error saving riddles" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }
 
   return NextResponse.json(
     { success: false, message: "Unknown action" },
-    { status: 400 }
+    { status: 400 },
   );
+}
+
+// DELETE /api/riddles?solver=username - Delete riddle set and all associated files
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const solver = searchParams.get("solver");
+
+  if (!solver)
+    return NextResponse.json(
+      { success: false, message: "Solver required" },
+      { status: 400 },
+    );
+
+  try {
+    const riddleSet = await prisma.riddleSet.findFirst({
+      where: { solver },
+      include: { prize: true },
+    });
+
+    if (!riddleSet) {
+      return NextResponse.json(
+        { success: false, message: "Riddle set not found" },
+        { status: 404 },
+      );
+    }
+
+    // Delete files from Supabase
+    if (riddleSet.mainMusic) {
+      await deleteFileFromSupabase(riddleSet.mainMusic);
+    }
+
+    if (riddleSet.prize) {
+      if (riddleSet.prize.music) {
+        await deleteFileFromSupabase(riddleSet.prize.music);
+      }
+      if (riddleSet.prize.backgroundImage) {
+        await deleteFileFromSupabase(riddleSet.prize.backgroundImage);
+      }
+    }
+
+    // Delete from database (cascade will handle riddles and prize)
+    await prisma.riddleSet.delete({
+      where: { id: riddleSet.id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting riddles:", error);
+    return NextResponse.json(
+      { success: false, message: "Error deleting riddles" },
+      { status: 500 },
+    );
+  }
 }
