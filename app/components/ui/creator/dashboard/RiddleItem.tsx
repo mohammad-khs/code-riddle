@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { Button } from "../../button";
 
 interface Riddle {
   question: string;
@@ -50,9 +51,9 @@ const RiddleItem: FC<RiddleItemProps> = ({
         />
       </div>
       <div className="mt-3">
-        <button type="button" onClick={() => onRemove(index)} className="text-red-600">
+        <Button type="button" onClick={() => onRemove(index)} variant={"destructive"}>
           Remove
-        </button>
+        </Button>
       </div>
     </div>
   );

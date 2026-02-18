@@ -49,7 +49,6 @@ export default function CreatorLogin() {
       setPassword={setPassword}
       onSubmit={handleSubmit}
       buttonText="Login as Creator"
-      buttonColor="blue"
       message={msg}
       isLoading={isLoading}
     />

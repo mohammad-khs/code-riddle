@@ -1,5 +1,6 @@
 import { FC } from "react";
 import RiddleItem from "./RiddleItem";
+import { Button } from "../../button";
 
 interface Riddle {
   question: string;
@@ -11,7 +12,7 @@ interface RiddleListProps {
   onUpdate: (
     index: number,
     field: "question" | "answer",
-    value: string
+    value: string,
   ) => void;
   onRemove: (index: number) => void;
   onAdd: () => void;
@@ -35,12 +36,9 @@ const RiddleList: FC<RiddleListProps> = ({
         />
       ))}
       <div>
-        <button
-          onClick={onAdd}
-          className="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-3 py-1 rounded-md"
-        >
+        <Button onClick={onAdd} variant={"green"}>
           Add Riddle
-        </button>
+        </Button>
       </div>
     </div>
   );

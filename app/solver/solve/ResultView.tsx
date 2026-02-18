@@ -25,14 +25,16 @@ export default function ResultView({
       style={backgroundStyle}
       className="h-svh flex justify-center items-center fixed top-0 left-0 w-full"
     >
-      <section className="max-w-3xl mx-6 sm:mx-auto overflow-y-scroll h-[500px] bg-black/30 backdrop-blur-sm dark:border-slate-700 rounded-lg p-6">
-        <div
-          dir="rtl"
-          className="whitespace-pre-wrap text-slate-700 dark:text-slate-200 text-lg"
-        >
-          {prize.letter}
-        </div>
-      </section>
+      {prize.letter && (
+        <section className="max-w-3xl mx-6 sm:mx-auto overflow-y-scroll h-[500px] bg-black/30 backdrop-blur-sm dark:border-slate-700 rounded-lg p-6">
+          <div
+            dir="rtl"
+            className="whitespace-pre-wrap wrap-break-word text-slate-700 dark:text-slate-200 text-lg"
+          >
+            {prize.letter}
+          </div>
+        </section>
+      )}
 
       {prize.music && (
         <MusicControlButton

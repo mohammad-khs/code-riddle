@@ -46,7 +46,6 @@ export default function CreatorRegister() {
       setPassword={setPassword}
       onSubmit={handleSubmit}
       buttonText="Register"
-      buttonColor="sky"
       message={msg}
     />
   );

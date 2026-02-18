@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
+import { Button } from "../button";
 
 type AuthFormProps = {
   title: string;
@@ -16,7 +17,6 @@ type AuthFormProps = {
   message: string;
   isLoading?: boolean;
   buttonDisabled?: boolean;
-  buttonColor?: "blue" | "green" | "sky";
 };
 
 export default function AuthForm({
@@ -33,14 +33,7 @@ export default function AuthForm({
   message,
   isLoading = false,
   buttonDisabled = false,
-  buttonColor = "blue",
 }: AuthFormProps) {
-  const buttonClasses = {
-    blue: `bg-blue-500 hover:bg-blue-600`,
-    green: `bg-green-500 hover:bg-green-600`,
-    sky: `bg-sky-500 hover:bg-sky-600`,
-  };
-
   return (
     <section className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-lg p-6 max-w-md mx-auto">
       <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
@@ -99,18 +92,13 @@ export default function AuthForm({
         </div>
 
         <div>
-          <button
+          <Button
             type="submit"
             disabled={isLoading || buttonDisabled}
-            className={`w-full disabled:opacity-50 ${
-              buttonClasses[buttonColor]
-            } disabled:hover:${buttonClasses[buttonColor]?.replace(
-              "hover:",
-              "",
-            )} text-white px-4 py-2 rounded-md font-medium transition`}
+            className={`w-full disabled:opacity-50 text-white px-4 py-2 rounded-md font-medium transition`}
           >
             {isLoading ? "Loading..." : buttonText}
-          </button>
+          </Button>
         </div>
       </form>
 

@@ -92,7 +92,6 @@ export default function RegisterSolver() {
       setPassword={setPassword}
       onSubmit={handleSubmit}
       buttonText="Register Solver"
-      buttonColor="sky"
       message={msg}
     />
   );

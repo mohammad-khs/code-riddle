@@ -18,10 +18,11 @@ const buttonVariants = cva(
         ghost: "hover:bg-white hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         green: "bg-[#00E070] text-white hover:bg-[#00cc63]",
-        icon: "border-2 rounded-lg flex justify-center items-center border-[#BAC4BE]",
+        icon: "rounded-lg flex justify-center items-center",
         approved: "border-2 border-[#00E070] text-[#898989]",
         lightGray:
           "border-[2px] border-[#D2D2D2] text-[#898989] hover:text-accent-foreground hover:bg-accent",
+        upload: "bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-900/40 dark:text-sky-400",
       },
       size: {
         default: "h-9 px-4 py-2",

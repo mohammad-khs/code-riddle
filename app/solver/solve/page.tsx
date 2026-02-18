@@ -6,6 +6,15 @@ import ResultView from "./ResultView";
 import { Riddle, Prize } from "@/types/solver-solve";
 
 export default function SolverSolve() {
+  // too much usestates in a single component
+  // local stroage problem
+  // add an optimized component / function to handle audio
+  // too many useeffects
+  // add a universal fetcher
+  // use next form for database update and auth
+  // not using types correctly
+  // there cannot be main music which is riddle music and no riddles 
+
   const [riddles, setRiddles] = useState<Riddle[]>([]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
@@ -32,9 +41,15 @@ export default function SolverSolve() {
       .then((r) => r.json())
       .then((d) => {
         const riddleSet = d.riddleSet || {};
-        setRiddles(riddleSet.riddles || []);
-        setMainMusic(riddleSet.mainMusic || "");
-        setIsLoading(false);
+        const riddleList = riddleSet.riddles || [];
+        setRiddles(riddleList);
+        setMainMusic(riddleSet.mainprizeMusic || "");
+        // If no riddles, fetch the prize directly
+        if (riddleList.length === 0) {
+          finish([]);
+        } else {
+          setIsLoading(false);
+        }
       })
       .catch(() => {
         setIsLoading(false);
@@ -171,7 +186,7 @@ export default function SolverSolve() {
     return <Loader />;
   }
 
-  if (result) {
+  if (result?.letter || result?.music || result?.backgroundImage) {
     return (
       <>
         <ResultView
@@ -188,8 +203,11 @@ export default function SolverSolve() {
 
   if (!riddles || riddles.length === 0) {
     return (
-      <div dir="rtl" className="h-svh flex items-center justify-center max-w-3xl mx-auto p-6 text-center text-2xl">
-        صبر کن 😊
+      <div
+        dir="rtl"
+        className="h-svh flex items-center justify-center max-w-3xl mx-auto p-6 text-center text-2xl"
+      >
+        منتظر باش تا سازنده برای تو سوالات درست کند 😊
       </div>
     );
   }
