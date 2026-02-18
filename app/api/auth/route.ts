@@ -1,7 +1,7 @@
 // app/api/auth/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { hashPassword, verifyPassword } from "@/lib/auth/Password";
 import { AuthRequestBody } from "@/types/auth";
 import { createSession, generateSessionToken } from "@/lib/auth/session";
 

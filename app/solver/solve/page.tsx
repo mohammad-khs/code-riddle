@@ -1,13 +1,16 @@
 "use client";
-import { PauseIcon, PlayIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Loader from "@/app/components/ui/Loader";
+import QuestionView from "./QuestionView";
+import ResultView from "./ResultView";
+import { Riddle, Prize } from "@/types/solver-solve";
 
 export default function SolverSolve() {
-  const [riddles, setRiddles] = useState<any[]>([]);
+  const [riddles, setRiddles] = useState<Riddle[]>([]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [currentAnswer, setCurrentAnswer] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Prize | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [feedback, setFeedback] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -15,6 +18,7 @@ export default function SolverSolve() {
   const [isMainPlaying, setIsMainPlaying] = useState(false);
   const mainAudioRef = useRef<HTMLAudioElement | null>(null);
   const [answerLoading, setAnswerLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Get solver username and creatorUsername from localStorage
@@ -30,8 +34,11 @@ export default function SolverSolve() {
         const riddleSet = d.riddleSet || {};
         setRiddles(riddleSet.riddles || []);
         setMainMusic(riddleSet.mainMusic || "");
+        setIsLoading(false);
       })
-      .catch(() => {});
+      .catch(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   function submitAnswer(e: any) {
@@ -81,13 +88,17 @@ export default function SolverSolve() {
       localStorage.getItem("username") || localStorage.getItem("solver") || "";
     const creatorUsername = localStorage.getItem("creatorUsername") || "";
     if (!solver || !creatorUsername) return;
+    setIsLoading(true);
     const res = await fetch("/api/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ solver, creatorUsername, answers: ans }),
     });
     const j = await res.json();
-    setResult(j);
+    if (j.success && j.prize) {
+      setResult(j.prize);
+    }
+    setIsLoading(false);
   }
 
   useEffect(() => {
@@ -110,7 +121,7 @@ export default function SolverSolve() {
 
   useEffect(() => {
     // when prize arrives and has music, try to autoplay and pause main music
-    if (result && result.success && result.prize && result.prize.music) {
+    if (result && result.music) {
       try {
         if (mainAudioRef.current && isMainPlaying) {
           mainAudioRef.current.pause();
@@ -118,7 +129,7 @@ export default function SolverSolve() {
         }
         if (audioRef.current) {
           audioRef.current.pause();
-          audioRef.current.src = result.prize.music;
+          audioRef.current.src = result.music;
           const p = audioRef.current.play();
           if (p && typeof p.then === "function") {
             p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
@@ -156,59 +167,28 @@ export default function SolverSolve() {
     }
   }
 
-  if (result && result.success) {
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (result) {
     return (
-      <div
-        style={
-          result.prize.backgroundImage
-            ? {
-                backgroundImage: `url(${result.prize.backgroundImage})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : {}
-        }
-        className="h-svh flex justify-center items-center fixed top-0 left-0 w-full"
-      >
-        <section className="max-w-3xl mx-6 sm:mx-auto overflow-y-scroll h-[500px] bg-black/30 backdrop-blur-sm dark:border-slate-700 rounded-lg p-6">
-          <div
-            dir="rtl"
-            className="whitespace-pre-wrap text-slate-700 dark:text-slate-200 text-lg"
-          >
-            {result.prize.letter}
-          </div>
-        </section>
-
-        {/* hidden audio element - controls hidden */}
-        {result.prize.music && (
-          <audio ref={audioRef} src={result.prize.music} className="hidden" />
+      <>
+        <ResultView
+          prize={result}
+          isPlaying={isPlaying}
+          onTogglePlay={togglePlay}
+        />
+        {result.music && (
+          <audio ref={audioRef} src={result.music} className="hidden" />
         )}
-
-        {/* floating play/pause control at bottom-right */}
-        {result.prize.music && (
-          <div className="fixed right-4 bottom-4 z-50">
-            <button
-              onClick={togglePlay}
-              className="flex items-center justify-center w-14 h-14 rounded-full bg-black/30 backdrop-blur-sm shadow"
-            >
-              <span className="sr-only">
-                {isPlaying ? "Pause music" : "Play music"}
-              </span>
-              {isPlaying ? (
-                <PauseIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-              ) : (
-                <PlayIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-              )}
-            </button>
-          </div>
-        )}
-      </div>
+      </>
     );
   }
 
   if (!riddles || riddles.length === 0) {
     return (
-      <div dir="rtl" className="max-w-3xl mx-auto p-6 text-center text-2xl">
+      <div dir="rtl" className="h-svh flex items-center justify-center max-w-3xl mx-auto p-6 text-center text-2xl">
         صبر کن 😊
       </div>
     );
@@ -217,63 +197,19 @@ export default function SolverSolve() {
   const item = riddles[index];
 
   return (
-    <div className="relative" dir="rtl">
-      <section className="max-w-3xl mx-auto bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-          سوال {index + 1}
-        </h2>
-        <div className="mb-4 text-slate-700 dark:text-slate-200">
-          {item.question}
-        </div>
-        <form onSubmit={submitAnswer} className="space-y-3">
-          <input
-            value={currentAnswer}
-            onChange={(e) => setCurrentAnswer(e.target.value)}
-            placeholder="پاسخ خود را اینجا وارد کنید"
-            disabled={answerLoading}
-            className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 disabled:opacity-50"
-          />
-          <div>
-            <button
-              disabled={answerLoading}
-              className="bg-sky-500 disabled:bg-sky-300/50 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
-            >
-              ثبت پاسخ
-            </button>
-          </div>
-        </form>
-        {feedback && (
-          <div
-            className={`mt-4 text-lg font-semibold ${
-              feedback.startsWith("✓") ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {feedback}
-          </div>
-        )}
-      </section>
-
-      {/* hidden main audio element */}
+    <>
+      <QuestionView
+        riddle={item}
+        totalRiddles={index + 1}
+        currentAnswer={currentAnswer}
+        feedback={feedback}
+        isLoading={answerLoading}
+        mainMusicPlaying={isMainPlaying}
+        onAnswerChange={setCurrentAnswer}
+        onSubmit={submitAnswer}
+        onToggleMainMusic={toggleMainPlay}
+      />
       {mainMusic && <audio ref={mainAudioRef} className="hidden" />}
-
-      {/* floating play/pause control for main music at bottom-left */}
-      {mainMusic && (
-        <div className="fixed left-4 bottom-4 z-50">
-          <button
-            onClick={toggleMainPlay}
-            className="flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow"
-          >
-            <span className="sr-only">
-              {isMainPlaying ? "Pause main music" : "Play main music"}
-            </span>
-            {isMainPlaying ? (
-              <PauseIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-            ) : (
-              <PlayIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-            )}
-          </button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
