@@ -1,5 +1,5 @@
 export interface AuthRequestBody {
-  action: "register" | "login" | "list_solvers";
+  action: "register" | "login" | "list_solvers" | "logout" | "logout_all";
   username?: string;
   password?: string;
   userType?: "creator" | "solver";

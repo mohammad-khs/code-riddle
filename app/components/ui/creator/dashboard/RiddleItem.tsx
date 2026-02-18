@@ -11,7 +11,7 @@ interface RiddleItemProps {
   onUpdate: (
     index: number,
     field: "question" | "answer",
-    value: string
+    value: string,
   ) => void;
   onRemove: (index: number) => void;
 }
@@ -23,10 +23,7 @@ const RiddleItem: FC<RiddleItemProps> = ({
   onRemove,
 }) => {
   return (
-    <div
-      key={index}
-      className="bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-md p-4"
-    >
+    <div className="bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 rounded-md p-4">
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
           Question
@@ -50,7 +47,11 @@ const RiddleItem: FC<RiddleItemProps> = ({
         />
       </div>
       <div className="mt-3">
-        <button type="button" onClick={() => onRemove(index)} className="text-red-600">
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="text-red-600"
+        >
           Remove
         </button>
       </div>

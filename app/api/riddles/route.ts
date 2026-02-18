@@ -1,4 +1,3 @@
-// app/api/riddles/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
@@ -8,34 +7,63 @@ interface RiddleInput {
   answer: string;
 }
 
-// GET /api/riddles?solver=username&creator=username
+// GET /api/riddles?solver=username
+// Optionally: ?creator=username (for creator dashboard use)
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const solverUsername = searchParams.get("solver");
     const creatorUsername = searchParams.get("creator");
 
-    if (!solverUsername || !creatorUsername) {
-      return NextResponse.json({}, { status: 400 });
+    if (!solverUsername) {
+      return NextResponse.json(
+        { success: false, message: "solver username required" },
+        { status: 400 },
+      );
     }
 
-    // Find creator first (multi-tenant: creators have creatorId: null)
-    const creator = await prisma.user.findFirst({
-      where: { username: creatorUsername, role: "creator", creatorId: null },
-    });
+    let solver;
+    let creator;
 
-    if (!creator) {
-      return NextResponse.json({}, { status: 404 });
+    if (creatorUsername) {
+      // Creator dashboard mode: find by creator + solver
+      creator = await prisma.user.findFirst({
+        where: { username: creatorUsername, role: "creator", creatorId: null },
+      });
+
+      if (!creator) {
+        return NextResponse.json({}, { status: 404 });
+      }
+
+      solver = await prisma.user.findFirst({
+        where: {
+          username: solverUsername,
+          role: "solver",
+          creatorId: creator.id,
+        },
+      });
+    } else {
+      // Solver mode: find solver and lookup creator
+      solver = await prisma.user.findFirst({
+        where: {
+          username: solverUsername,
+          role: "solver",
+        },
+        include: {
+          creatorRiddleSets: {
+            include: {
+              creator: true,
+            },
+          },
+        },
+      });
+
+      if (solver && solver.creatorId) {
+        creator = await prisma.user.findFirst({
+          where: { id: solver.creatorId },
+        });
+      }
     }
-
-    // Find solver by username AND creatorId (multi-tenant)
-    const solver = await prisma.user.findFirst({
-      where: {
-        username: solverUsername,
-        role: "solver",
-        creatorId: creator.id,
-      },
-    });
 
     if (!solver) {
       return NextResponse.json({});
@@ -57,6 +85,7 @@ export async function GET(req: Request) {
     const supabase = createClient();
     const result = {
       solver: { id: solver.id, username: solver.username },
+      creatorUsername: creator?.username,
       riddleSet: { ...riddleSet },
     };
 

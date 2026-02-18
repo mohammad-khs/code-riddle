@@ -1,8 +1,10 @@
 "use client";
 import { PauseIcon, PlayIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SolverSolve() {
+  const router = useRouter();
   const [riddles, setRiddles] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
@@ -15,15 +17,38 @@ export default function SolverSolve() {
   const [isMainPlaying, setIsMainPlaying] = useState(false);
   const mainAudioRef = useRef<HTMLAudioElement | null>(null);
   const [answerLoading, setAnswerLoading] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
+  const [creatorUsername, setCreatorUsername] = useState("");
 
   useEffect(() => {
-    // Get solver username and creatorUsername from localStorage
-    const solver =
-      localStorage.getItem("username") || localStorage.getItem("solver") || "";
-    const creatorUsername = localStorage.getItem("creatorUsername") || "";
-    if (!solver || !creatorUsername) return;
+    // Validate session with the server
+    fetch("/api/auth/validate")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.valid || data.user.role !== "solver") {
+          router.push("/solver/login");
+          return;
+        }
+        setUsername(data.user.username);
+        // Get creatorUsername from validate response
+        if (data.user.creatorUsername) {
+          setCreatorUsername(data.user.creatorUsername);
+        }
+        setAuthorized(true);
+        setLoading(false);
+      })
+      .catch(() => {
+        router.push("/solver/login");
+      });
+  }, [router]);
+
+  useEffect(() => {
+    if (!authorized || !username || !creatorUsername) return;
+    // Fetch riddles for this solver, scoped to the correct creator
     fetch(
-      `/api/riddles?solver=${encodeURIComponent(solver)}&creator=${encodeURIComponent(creatorUsername)}`,
+      `/api/riddles?solver=${encodeURIComponent(username)}&creator=${encodeURIComponent(creatorUsername)}`,
     )
       .then((r) => r.json())
       .then((d) => {
@@ -32,7 +57,7 @@ export default function SolverSolve() {
         setMainMusic(riddleSet.mainMusic || "");
       })
       .catch(() => {});
-  }, []);
+  }, [authorized, username, creatorUsername]);
 
   function submitAnswer(e: any) {
     e.preventDefault();
@@ -46,7 +71,7 @@ export default function SolverSolve() {
       .trim()
       .toLowerCase();
     if (userAnswer === "") {
-      setFeedback("✗ چیزی ننوشتی ");
+      setFeedback("✗ You wrote nothing");
       setAnswerLoading(false);
       return;
     }
@@ -56,7 +81,7 @@ export default function SolverSolve() {
       nextAnswers[index] = currentAnswer;
       setAnswers(nextAnswers);
       setCurrentAnswer("");
-      setFeedback("✓ درسته");
+      setFeedback("✓ Correct");
 
       // Move to next riddle or finish
       setTimeout(() => {
@@ -71,20 +96,17 @@ export default function SolverSolve() {
       }, 800);
     } else {
       // Answer is incorrect
-      setFeedback("✗ اشتباس، دوباره امتحان کن.");
+      setFeedback("✗ Wrong, try again.");
       setAnswerLoading(false);
     }
   }
 
   async function finish(ans: string[]) {
-    const solver =
-      localStorage.getItem("username") || localStorage.getItem("solver") || "";
-    const creatorUsername = localStorage.getItem("creatorUsername") || "";
-    if (!solver || !creatorUsername) return;
+    if (!username || !creatorUsername) return;
     const res = await fetch("/api/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ solver, creatorUsername, answers: ans }),
+      body: JSON.stringify({ solver: username, creatorUsername, answers: ans }),
     });
     const j = await res.json();
     setResult(j);
@@ -208,8 +230,8 @@ export default function SolverSolve() {
 
   if (!riddles || riddles.length === 0) {
     return (
-      <div dir="rtl" className="max-w-3xl mx-auto p-6 text-center text-2xl">
-        صبر کن 😊
+      <div className="max-w-3xl mx-auto p-6 text-center text-2xl">
+        Wait a moment 😊
       </div>
     );
   }
@@ -217,10 +239,10 @@ export default function SolverSolve() {
   const item = riddles[index];
 
   return (
-    <div className="relative" dir="rtl">
+    <div className="relative">
       <section className="max-w-3xl mx-auto bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
         <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-          سوال {index + 1}
+          Question {index + 1}
         </h2>
         <div className="mb-4 text-slate-700 dark:text-slate-200">
           {item.question}
@@ -229,7 +251,7 @@ export default function SolverSolve() {
           <input
             value={currentAnswer}
             onChange={(e) => setCurrentAnswer(e.target.value)}
-            placeholder="پاسخ خود را اینجا وارد کنید"
+            placeholder="Enter your answer here"
             disabled={answerLoading}
             className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 disabled:opacity-50"
           />
@@ -238,7 +260,7 @@ export default function SolverSolve() {
               disabled={answerLoading}
               className="bg-sky-500 disabled:bg-sky-300/50 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
             >
-              ثبت پاسخ
+              Submit Answer
             </button>
           </div>
         </form>

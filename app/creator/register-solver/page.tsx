@@ -9,42 +9,26 @@ export default function RegisterSolver() {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [authorized, setAuthorized] = useState(false);
-
-  // Initialize creatorUsername from localStorage to avoid setState in effect
-  const [creatorUsername, setCreatorUsername] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("username") || "";
-    }
-    return "";
-  });
+  const [creatorUsername, setCreatorUsername] = useState("");
 
   const router = useRouter();
 
   useEffect(() => {
-    // Handle authorization check
-    const checkAuthorization = () => {
-      try {
-        const userType = localStorage.getItem("userType");
-        const creator = localStorage.getItem("username");
-
-        if (userType !== "creator" || !creator) {
-          router.push("/");
+    // Validate session with the server
+    fetch("/api/auth/validate")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.valid || data.user.role !== "creator") {
+          router.push("/creator/login");
           return;
         }
-
-        // Only update state if creator username has changed
-        if (creator !== creatorUsername) {
-          setCreatorUsername(creator);
-        }
+        setCreatorUsername(data.user.username);
         setAuthorized(true);
-      } catch (error) {
-        console.error("Error accessing localStorage:", error);
-        router.push("/");
-      }
-    };
-
-    checkAuthorization();
-  }, [router, creatorUsername]);
+      })
+      .catch(() => {
+        router.push("/creator/login");
+      });
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent<Element>) {
     e.preventDefault();

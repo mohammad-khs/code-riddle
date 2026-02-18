@@ -38,10 +38,7 @@ export default function SolverLogin() {
     const j = await res.json();
 
     if (j.success) {
-      localStorage.setItem("token", j.token || "");
-      localStorage.setItem("userType", "solver");
-      localStorage.setItem("username", username);
-      localStorage.setItem("creatorUsername", creatorUsername);
+      // Session is handled via HttpOnly cookie - no need to store token
       router.push("/solver/solve");
     } else {
       setMsg(j.message || "Error");

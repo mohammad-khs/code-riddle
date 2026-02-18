@@ -1,5 +1,8 @@
+import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-import prisma from "@/lib/prisma";
+
+const SESSION_DURATION = 1000 * 60 * 60 * 24 * 7; // 7 days
+const SLIDING_WINDOW = 1000 * 60 * 60 * 24 * 3; // 3 days
 
 export function generateSessionToken() {
   return crypto.randomBytes(32).toString("hex");
@@ -9,14 +12,21 @@ export function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-export async function createSession(userId: string, token: string) {
+export async function createSession(
+  userId: string,
+  token: string,
+  ip?: string,
+  userAgent?: string,
+) {
   const tokenHash = hashToken(token);
 
   return prisma.session.create({
     data: {
       userId,
       tokenHash,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      ip,
+      userAgent,
+      expiresAt: new Date(Date.now() + SESSION_DURATION),
     },
   });
 }
@@ -24,7 +34,7 @@ export async function createSession(userId: string, token: string) {
 export async function validateSession(token: string) {
   const tokenHash = hashToken(token);
 
-  return prisma.session.findFirst({
+  const session = await prisma.session.findFirst({
     where: {
       tokenHash,
       expiresAt: { gt: new Date() },
@@ -32,5 +42,41 @@ export async function validateSession(token: string) {
     include: {
       user: true,
     },
+  });
+
+  if (!session) return null;
+
+  // Suspend check
+  if (!session.user.isActive) {
+    await prisma.session.deleteMany({
+      where: { userId: session.userId },
+    });
+    return null;
+  }
+
+  // Sliding expiration
+  const timeLeft = session.expiresAt.getTime() - Date.now();
+  if (timeLeft < SLIDING_WINDOW) {
+    await prisma.session.update({
+      where: { id: session.id },
+      data: {
+        expiresAt: new Date(Date.now() + SESSION_DURATION),
+      },
+    });
+  }
+
+  return session.user;
+}
+
+export async function deleteSession(token: string) {
+  const tokenHash = hashToken(token);
+  return prisma.session.deleteMany({
+    where: { tokenHash },
+  });
+}
+
+export async function deleteAllSessions(userId: string) {
+  return prisma.session.deleteMany({
+    where: { userId },
   });
 }

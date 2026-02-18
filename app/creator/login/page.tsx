@@ -30,9 +30,7 @@ export default function CreatorLogin() {
     const j = await res.json();
 
     if (j.success) {
-      localStorage.setItem("token", j.token || "");
-      localStorage.setItem("userType", "creator");
-      localStorage.setItem("username", username);
+      // Session is handled via HttpOnly cookie - no need to store token
       router.push("/creator/dashboard");
     } else {
       setMsg(j.message || "Error");

@@ -2,6 +2,7 @@ import { FC } from "react";
 import RiddleItem from "./RiddleItem";
 
 interface Riddle {
+  id?: string;
   question: string;
   answer: string;
 }
@@ -11,7 +12,7 @@ interface RiddleListProps {
   onUpdate: (
     index: number,
     field: "question" | "answer",
-    value: string
+    value: string,
   ) => void;
   onRemove: (index: number) => void;
   onAdd: () => void;
@@ -27,7 +28,7 @@ const RiddleList: FC<RiddleListProps> = ({
     <div className="space-y-4">
       {riddle.map((riddleItem, index) => (
         <RiddleItem
-          key={index}
+          key={riddleItem.id || `new-${index}`}
           riddle={riddleItem}
           index={index}
           onUpdate={onUpdate}

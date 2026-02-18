@@ -31,46 +31,57 @@ export default function CreatorDashboard() {
   const [solver, setSolver] = useState("");
   const [solvers, setSolvers] = useState<string[]>([]);
   const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
-    // Check if user is a creator
-    const userType = localStorage.getItem("userType");
-    if (userType !== "creator") {
-      router.push("/");
-      return;
-    }
-    setAuthorized(true);
+    // Validate session with the server
+    fetch("/api/auth/validate")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.valid || data.user.role !== "creator") {
+          router.push("/creator/login");
+          return;
+        }
+        setUsername(data.user.username);
+        setAuthorized(true);
+        setLoading(false);
+      })
+      .catch(() => {
+        router.push("/creator/login");
+      });
   }, [router]);
 
   useEffect(() => {
-    if (!authorized) return;
-    const creatorUsername = localStorage.getItem("username");
-    if (!creatorUsername) return;
+    if (!authorized || !username) return;
     // Fetch solvers created by this creator
     fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "list_solvers",
-        creatorUsername: creatorUsername,
+        creatorUsername: username,
       }),
     })
       .then((r) => r.json())
       .then((d) => {
         setSolvers(d.solvers || []);
       });
-  }, [authorized]);
+  }, [authorized, username]);
 
   useEffect(() => {
     if (!solver) return;
-    fetch(`/api/riddles?solver=${encodeURIComponent(solver)}`)
+    fetch(
+      `/api/riddles?solver=${encodeURIComponent(solver)}&creator=${encodeURIComponent(username)}`,
+    )
       .then((r) => r.json())
       .then((d) => {
-        setRiddles(d.riddles || []);
-        setPrizeLetter((d.prize && d.prize.letter) || "");
+        const riddleSet = d.riddleSet || {};
+        setRiddles(riddleSet.riddles || []);
+        setPrizeLetter((riddleSet.prize && riddleSet.prize.letter) || "");
       })
       .catch(() => {});
-  }, [solver]);
+  }, [solver, username]);
 
   function addRiddle() {
     setRiddles([...riddles, { question: "", answer: "" }]);
@@ -93,8 +104,7 @@ export default function CreatorDashboard() {
       setMsg("Please select a solver");
       return;
     }
-    const creatorUsername = localStorage.getItem("username");
-    if (!creatorUsername) {
+    if (!username) {
       setMsg("Creator username not found");
       return;
     }
@@ -119,7 +129,7 @@ export default function CreatorDashboard() {
       body: JSON.stringify({
         action: "save",
         solver,
-        creatorUsername,
+        creatorUsername: username,
         riddles,
         prizeLetter,
         prizeMusicPath,

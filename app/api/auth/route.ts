@@ -1,14 +1,65 @@
-// app/api/auth/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { AuthRequestBody } from "@/types/auth";
-import { createSession, generateSessionToken } from "@/lib/auth/session";
+import {
+  createSession,
+  generateSessionToken,
+  deleteSession,
+  deleteAllSessions,
+  validateSession,
+} from "@/lib/auth/session";
+import {
+  setSessionCookie,
+  clearSessionCookie,
+  getSessionToken,
+} from "@/lib/auth/cookies";
 
 export async function POST(req: Request) {
   try {
     const body: AuthRequestBody = await req.json();
     const { action, username, password, userType, creatorUsername } = body;
+
+    if (action === "logout") {
+      const token = getSessionToken(req);
+
+      if (token) {
+        await deleteSession(token);
+      }
+
+      const response = NextResponse.json({ success: true });
+      clearSessionCookie(response);
+
+      return response;
+    }
+
+    if (action === "logout_all") {
+      const token = getSessionToken(req);
+
+      if (!token) {
+        return NextResponse.json(
+          { success: false, message: "Unauthorized" },
+          { status: 401 },
+        );
+      }
+
+      const user = await validateSession(token);
+      if (!user) {
+        const response = NextResponse.json(
+          { success: false, message: "Unauthorized" },
+          { status: 401 },
+        );
+        clearSessionCookie(response);
+        return response;
+      }
+
+      await deleteAllSessions(user.id);
+
+      const response = NextResponse.json({ success: true });
+      clearSessionCookie(response);
+
+      return response;
+    }
 
     if (action === "list_solvers") {
       if (!creatorUsername) {
@@ -228,17 +279,24 @@ export async function POST(req: Request) {
       }
 
       const token = generateSessionToken();
-      await createSession(user.id, token);
+      const ip = req.headers.get("x-forwarded-for") || "unknown";
+      const userAgent = req.headers.get("user-agent") || "unknown";
 
-      return NextResponse.json({
+      await createSession(user.id, token, ip, userAgent);
+
+      const response = NextResponse.json({
         success: true,
-        token,
         user: {
           id: user.id,
           username: user.username,
           role: user.role,
         },
       });
+
+      // Set HttpOnly cookie using helper
+      setSessionCookie(response, token);
+
+      return response;
     }
 
     return NextResponse.json(
