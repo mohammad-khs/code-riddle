@@ -1,3 +1,4 @@
+// app/api/submit/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
@@ -11,29 +12,52 @@ interface Prize {
   createdAt: Date;
 }
 
-// POST /api/submit { solver, answers }
+// POST /api/submit { solver, creatorUsername, answers }
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { solver, answers } = body;
-
-  if (!solver) {
-    return NextResponse.json(
-      { success: false, message: "solver username required" },
-      { status: 400 },
-    );
-  }
-
-  if (!Array.isArray(answers)) {
-    return NextResponse.json(
-      { success: false, message: "Answers required" },
-      { status: 400 },
-    );
-  }
-
   try {
-    // Find solver by username
+    const body = await req.json();
+    const { solver, creatorUsername, answers } = body;
+
+    if (!solver) {
+      return NextResponse.json(
+        { success: false, message: "solver username required" },
+        { status: 400 },
+      );
+    }
+
+    if (!creatorUsername) {
+      return NextResponse.json(
+        { success: false, message: "creatorUsername required" },
+        { status: 400 },
+      );
+    }
+
+    if (!Array.isArray(answers)) {
+      return NextResponse.json(
+        { success: false, message: "Answers required" },
+        { status: 400 },
+      );
+    }
+
+    // Find creator first (multi-tenant: creators have creatorId: null)
+    const creator = await prisma.user.findFirst({
+      where: { username: creatorUsername, role: "creator", creatorId: null },
+    });
+
+    if (!creator) {
+      return NextResponse.json(
+        { success: false, message: "Creator not found" },
+        { status: 404 },
+      );
+    }
+
+    // Find solver by username AND creatorId (multi-tenant)
     const solverUser = await prisma.user.findFirst({
-      where: { username: solver, role: "solver" },
+      where: {
+        username: solver,
+        role: "solver",
+        creatorId: creator.id,
+      },
     });
 
     if (!solverUser) {

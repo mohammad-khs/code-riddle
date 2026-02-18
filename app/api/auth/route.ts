@@ -1,14 +1,14 @@
+// app/api/auth/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, verifyPassword } from "@/lib/auth/Password";
-import { randomBytes } from "crypto";
-import { AuthPostBody } from "@/types/auth";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { AuthRequestBody } from "@/types/auth";
+import { createSession, generateSessionToken } from "@/lib/auth/session";
 
 export async function POST(req: Request) {
   try {
-    const body: AuthPostBody = await req.json();
+    const body: AuthRequestBody = await req.json();
     const { action, username, password, userType, creatorUsername } = body;
-
 
     if (action === "list_solvers") {
       if (!creatorUsername) {
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         where: {
           username: creatorUsername,
           role: "creator",
-          creatorId: null, 
+          creatorId: null,
           isActive: true,
         },
       });
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
           where: {
             username: creatorUsername,
             role: "creator",
-            creatorId: null, 
+            creatorId: null,
             isActive: true,
           },
         });
@@ -227,18 +227,8 @@ export async function POST(req: Request) {
         );
       }
 
-      /////////////////////////////////////////////////////////////////////////////
-      const token = randomBytes(32).toString("hex");
-
-      // ذخیره session
-      await prisma.session.create({
-        data: {
-          userId: user.id,
-          tokenHash: await hashPassword({ password: token }),
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
-        },
-      });
-      /////////////////////////////////////////////////////////////////////////////
+      const token = generateSessionToken();
+      await createSession(user.id, token);
 
       return NextResponse.json({
         success: true,

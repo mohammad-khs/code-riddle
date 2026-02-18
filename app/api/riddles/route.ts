@@ -1,3 +1,4 @@
+// app/api/riddles/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
@@ -7,21 +8,40 @@ interface RiddleInput {
   answer: string;
 }
 
-// GET /api/riddles?solver=username
+// GET /api/riddles?solver=username&creator=username
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const solverUsername = searchParams.get("solver");
-
-  if (!solverUsername) return NextResponse.json({});
-
   try {
-    // Find the solver user by username
-    const solver = await prisma.user.findFirst({
-      where: { username: solverUsername, role: "solver" },
+    const { searchParams } = new URL(req.url);
+    const solverUsername = searchParams.get("solver");
+    const creatorUsername = searchParams.get("creator");
+
+    if (!solverUsername || !creatorUsername) {
+      return NextResponse.json({}, { status: 400 });
+    }
+
+    // Find creator first (multi-tenant: creators have creatorId: null)
+    const creator = await prisma.user.findFirst({
+      where: { username: creatorUsername, role: "creator", creatorId: null },
     });
 
-    if (!solver) return NextResponse.json({});
+    if (!creator) {
+      return NextResponse.json({}, { status: 404 });
+    }
 
+    // Find solver by username AND creatorId (multi-tenant)
+    const solver = await prisma.user.findFirst({
+      where: {
+        username: solverUsername,
+        role: "solver",
+        creatorId: creator.id,
+      },
+    });
+
+    if (!solver) {
+      return NextResponse.json({});
+    }
+
+    // Get the riddle set for this solver
     const riddleSet = await prisma.riddleSet.findFirst({
       where: { solverId: solver.id },
       include: {
@@ -35,37 +55,43 @@ export async function GET(req: Request) {
     }
 
     const supabase = createClient();
-    const result = { ...riddleSet };
+    const result = {
+      solver: { id: solver.id, username: solver.username },
+      riddleSet: { ...riddleSet },
+    };
 
-    if (result.mainMusic) {
+    // Generate signed URLs for media files
+    if (result.riddleSet.mainMusic) {
       try {
         const { data } = await supabase.storage
           .from("uploads")
-          .createSignedUrl(result.mainMusic, 3600);
-        result.mainMusic = data?.signedUrl || result.mainMusic;
+          .createSignedUrl(result.riddleSet.mainMusic, 3600);
+        result.riddleSet.mainMusic =
+          data?.signedUrl || result.riddleSet.mainMusic;
       } catch (e) {
         console.error("Error generating signed URL for mainMusic:", e);
       }
     }
 
-    if (result.prize?.music) {
+    if (result.riddleSet.prize?.music) {
       try {
         const { data } = await supabase.storage
           .from("uploads")
-          .createSignedUrl(result.prize.music, 3600);
-        result.prize.music = data?.signedUrl || result.prize.music;
+          .createSignedUrl(result.riddleSet.prize.music, 3600);
+        result.riddleSet.prize.music =
+          data?.signedUrl || result.riddleSet.prize.music;
       } catch (e) {
         console.error("Error generating signed URL for prize music:", e);
       }
     }
 
-    if (result.prize?.backgroundImage) {
+    if (result.riddleSet.prize?.backgroundImage) {
       try {
         const { data } = await supabase.storage
           .from("uploads")
-          .createSignedUrl(result.prize.backgroundImage, 3600);
-        result.prize.backgroundImage =
-          data?.signedUrl || result.prize.backgroundImage;
+          .createSignedUrl(result.riddleSet.prize.backgroundImage, 3600);
+        result.riddleSet.prize.backgroundImage =
+          data?.signedUrl || result.riddleSet.prize.backgroundImage;
       } catch (e) {
         console.error("Error generating signed URL for background image:", e);
       }
@@ -112,25 +138,30 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Find solver and creator by username
-      const solverUser = await prisma.user.findFirst({
-        where: { username: solver, role: "solver" },
-      });
-
-      if (!solverUser) {
-        return NextResponse.json(
-          { success: false, message: "Solver not found" },
-          { status: 404 },
-        );
-      }
-
+      // Find creator first
       const creatorUser = await prisma.user.findFirst({
-        where: { username: creatorUsername, role: "creator" },
+        where: { username: creatorUsername, role: "creator", creatorId: null },
       });
 
       if (!creatorUser) {
         return NextResponse.json(
           { success: false, message: "Creator not found" },
+          { status: 404 },
+        );
+      }
+
+      // Find solver by username AND creatorId (multi-tenant)
+      const solverUser = await prisma.user.findFirst({
+        where: {
+          username: solver,
+          role: "solver",
+          creatorId: creatorUser.id,
+        },
+      });
+
+      if (!solverUser) {
+        return NextResponse.json(
+          { success: false, message: "Solver not found" },
           { status: 404 },
         );
       }

@@ -1,4 +1,4 @@
-export interface AuthPostBody {
+export interface AuthRequestBody {
   action: "register" | "login" | "list_solvers";
   username?: string;
   password?: string;
@@ -6,10 +6,10 @@ export interface AuthPostBody {
   creatorUsername?: string;
 }
 
-export interface HashPassword {
+export interface HashPasswordParams {
   password: string;
 }
 
-export interface VerifyPassword extends HashPassword {
+export interface VerifyPasswordParams extends HashPasswordParams {
   hash: string;
 }

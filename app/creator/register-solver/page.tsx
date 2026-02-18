@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/ui/form/AuthForm";
-import { AuthPostBody } from "@/types/auth";
+import { AuthRequestBody } from "@/types/auth";
 export default function RegisterSolver() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +49,7 @@ export default function RegisterSolver() {
   async function handleSubmit(e: React.FormEvent<Element>) {
     e.preventDefault();
     setMsg("");
-    const bodyContent: AuthPostBody = {
+    const bodyContent: AuthRequestBody = {
       action: "register",
       username,
       password,

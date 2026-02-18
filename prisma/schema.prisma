@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -16,7 +17,7 @@ model User {
 
   email     String?                   // just for creator
   phone     String?                   // just for creator
-  
+
   createdAt DateTime @default(now())
 
   sessions       Session[]            // Relations
@@ -27,7 +28,6 @@ model User {
 
   @@unique([username, creatorId])     // for every Creator userName must be unique
   @@index([role])                     // query for fast role-based
-  // @@index([creatorId, role])
   @@map("users")
 }
 

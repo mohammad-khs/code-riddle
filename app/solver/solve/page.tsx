@@ -17,15 +17,19 @@ export default function SolverSolve() {
   const [answerLoading, setAnswerLoading] = useState(false);
 
   useEffect(() => {
-    // Get solver username from localStorage
+    // Get solver username and creatorUsername from localStorage
     const solver =
       localStorage.getItem("username") || localStorage.getItem("solver") || "";
-    if (!solver) return;
-    fetch(`/api/riddles?solver=${encodeURIComponent(solver)}`)
+    const creatorUsername = localStorage.getItem("creatorUsername") || "";
+    if (!solver || !creatorUsername) return;
+    fetch(
+      `/api/riddles?solver=${encodeURIComponent(solver)}&creator=${encodeURIComponent(creatorUsername)}`,
+    )
       .then((r) => r.json())
       .then((d) => {
-        setRiddles(d.riddles || []);
-        setMainMusic(d.mainMusic || "");
+        const riddleSet = d.riddleSet || {};
+        setRiddles(riddleSet.riddles || []);
+        setMainMusic(riddleSet.mainMusic || "");
       })
       .catch(() => {});
   }, []);
@@ -75,11 +79,12 @@ export default function SolverSolve() {
   async function finish(ans: string[]) {
     const solver =
       localStorage.getItem("username") || localStorage.getItem("solver") || "";
-    if (!solver) return;
+    const creatorUsername = localStorage.getItem("creatorUsername") || "";
+    if (!solver || !creatorUsername) return;
     const res = await fetch("/api/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ solver, answers: ans }),
+      body: JSON.stringify({ solver, creatorUsername, answers: ans }),
     });
     const j = await res.json();
     setResult(j);
@@ -94,7 +99,7 @@ export default function SolverSolve() {
         const p = mainAudioRef.current.play();
         if (p && typeof p.then === "function") {
           p.then(() => setIsMainPlaying(true)).catch(() =>
-            setIsMainPlaying(false)
+            setIsMainPlaying(false),
           );
         }
       } catch (e) {
