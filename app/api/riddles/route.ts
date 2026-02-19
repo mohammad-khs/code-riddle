@@ -1,19 +1,38 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { getSessionToken } from "@/lib/auth/cookies";
+import { validateSession } from "@/lib/auth/session";
 
 interface RiddleInput {
   question: string;
   answer: string;
 }
 
+// Helper to get authenticated user
+async function getAuthenticatedUser(req: Request) {
+  const token = getSessionToken(req);
+  if (!token) return null;
+  return validateSession(token);
+}
+
 // GET /api/riddles?solver=username
-// Optionally: ?creator=username (for creator dashboard use)
+// Authorization:
+// - Creators: can only see riddles for their own solvers
+// - Solvers: can only see their own riddles
 export async function GET(req: Request) {
   try {
+    // Authenticate user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const solverUsername = searchParams.get("solver");
-    const creatorUsername = searchParams.get("creator");
 
     if (!solverUsername) {
       return NextResponse.json(
@@ -25,16 +44,20 @@ export async function GET(req: Request) {
     let solver;
     let creator;
 
-    if (creatorUsername) {
-      // Creator dashboard mode: find by creator + solver
-      creator = await prisma.user.findFirst({
-        where: { username: creatorUsername, role: "creator", creatorId: null },
+    if (user.role === "creator") {
+      // Creator mode: can only access their own solvers
+      creator = await prisma.user.findUnique({
+        where: { id: user.id },
       });
 
       if (!creator) {
-        return NextResponse.json({}, { status: 404 });
+        return NextResponse.json(
+          { success: false, message: "Creator not found" },
+          { status: 404 },
+        );
       }
 
+      // Find solver that belongs to this creator
       solver = await prisma.user.findFirst({
         where: {
           username: solverUsername,
@@ -42,13 +65,20 @@ export async function GET(req: Request) {
           creatorId: creator.id,
         },
       });
-    } else {
-      // Solver mode: find solver and lookup creator
-      solver = await prisma.user.findFirst({
-        where: {
-          username: solverUsername,
-          role: "solver",
-        },
+    } else if (user.role === "solver") {
+      // Solver mode: can only see their own riddles
+      if (user.username !== solverUsername) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Forbidden: can only access your own riddles",
+          },
+          { status: 403 },
+        );
+      }
+
+      solver = await prisma.user.findUnique({
+        where: { id: user.id },
         include: {
           creatorRiddleSets: {
             include: {
@@ -58,11 +88,16 @@ export async function GET(req: Request) {
         },
       });
 
-      if (solver && solver.creatorId) {
-        creator = await prisma.user.findFirst({
+      if (solver?.creatorId) {
+        creator = await prisma.user.findUnique({
           where: { id: solver.creatorId },
         });
       }
+    } else {
+      return NextResponse.json(
+        { success: false, message: "Invalid role" },
+        { status: 403 },
+      );
     }
 
     if (!solver) {
@@ -136,67 +171,73 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/riddles { action: "save", solver, creatorUsername, riddles, prizeLetter, prizeMusicPath, mainMusicPath, backgroundImagePath }
+// POST /api/riddles { action: "save", solver, riddles, prizeLetter, prizeMusicPath, mainMusicPath, backgroundImagePath }
+// Authorization: Only creators can save riddles, and only for their own solvers
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { action } = body;
-
-  if (action === "save") {
-    const {
-      solver,
-      creatorUsername,
-      riddles,
-      prizeLetter,
-      prizeMusicPath,
-      mainMusicPath,
-      backgroundImagePath,
-    } = body;
-
-    if (!solver) {
+  try {
+    // Authenticate user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
       return NextResponse.json(
-        { success: false, message: "solver username required" },
-        { status: 400 },
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
       );
     }
 
-    if (!creatorUsername) {
+    // Only creators can save riddles
+    if (user.role !== "creator") {
       return NextResponse.json(
-        { success: false, message: "creatorUsername required" },
-        { status: 400 },
+        {
+          success: false,
+          message: "Forbidden: only creators can save riddles",
+        },
+        { status: 403 },
       );
     }
 
-    try {
-      // Find creator first
-      const creatorUser = await prisma.user.findFirst({
-        where: { username: creatorUsername, role: "creator", creatorId: null },
-      });
+    const body = await req.json();
+    const { action } = body;
 
-      if (!creatorUser) {
+    if (action === "save") {
+      const {
+        solver: solverUsername,
+        riddles,
+        prizeLetter,
+        prizeMusicPath,
+        mainMusicPath,
+        backgroundImagePath,
+      } = body;
+
+      if (!solverUsername) {
         return NextResponse.json(
-          { success: false, message: "Creator not found" },
-          { status: 404 },
+          { success: false, message: "solver username required" },
+          { status: 400 },
         );
       }
 
-      // Find solver by username AND creatorId (multi-tenant)
+      // Get creator from authenticated session
+      const creatorId = user.id;
+
+      // Find solver by username AND creatorId (multi-tenant isolation)
       const solverUser = await prisma.user.findFirst({
         where: {
-          username: solver,
+          username: solverUsername,
           role: "solver",
-          creatorId: creatorUser.id,
+          creatorId: creatorId,
         },
       });
 
       if (!solverUser) {
         return NextResponse.json(
-          { success: false, message: "Solver not found" },
+          {
+            success: false,
+            message: "Solver not found or doesn't belong to you",
+          },
           { status: 404 },
         );
       }
 
       const solverId = solverUser.id;
-      const creatorId = creatorUser.id;
 
       // Store URLs directly in database (or empty string if not provided)
       const prizeMusic = prizeMusicPath || "";
@@ -263,17 +304,17 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({ success: true });
-    } catch (error) {
-      console.error("Error saving riddles:", error);
-      return NextResponse.json(
-        { success: false, message: "Error saving riddles" },
-        { status: 500 },
-      );
     }
-  }
 
-  return NextResponse.json(
-    { success: false, message: "Unknown action" },
-    { status: 400 },
-  );
+    return NextResponse.json(
+      { success: false, message: "Unknown action" },
+      { status: 400 },
+    );
+  } catch (error) {
+    console.error("Error saving riddles:", error);
+    return NextResponse.json(
+      { success: false, message: "Error saving riddles" },
+      { status: 500 },
+    );
+  }
 }

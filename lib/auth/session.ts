@@ -34,10 +34,10 @@ export async function createSession(
 export async function validateSession(token: string) {
   const tokenHash = hashToken(token);
 
-  const session = await prisma.session.findFirst({
+  // Use findUnique since tokenHash is unique
+  const session = await prisma.session.findUnique({
     where: {
       tokenHash,
-      expiresAt: { gt: new Date() },
     },
     include: {
       user: true,
@@ -45,6 +45,15 @@ export async function validateSession(token: string) {
   });
 
   if (!session) return null;
+
+  // Expiration check
+  if (session.expiresAt <= new Date()) {
+    // Clean up expired session
+    await prisma.session.delete({
+      where: { id: session.id },
+    });
+    return null;
+  }
 
   // Suspend check
   if (!session.user.isActive) {

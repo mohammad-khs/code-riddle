@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { getSessionToken } from "@/lib/auth/cookies";
+import { validateSession } from "@/lib/auth/session";
 
 interface Prize {
   id: string;
@@ -11,25 +13,40 @@ interface Prize {
   createdAt: Date;
 }
 
-// POST /api/submit { solver, creatorUsername, answers }
+// Helper to get authenticated user
+async function getAuthenticatedUser(req: Request) {
+  const token = getSessionToken(req);
+  if (!token) return null;
+  return validateSession(token);
+}
+
+// POST /api/submit { answers }
+// Authorization: Only solvers can submit, and only for their own riddles
+// Identity comes from session, NOT from body
 export async function POST(req: Request) {
   try {
+    // Authenticate user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    // Only solvers can submit answers
+    if (user.role !== "solver") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Forbidden: only solvers can submit answers",
+        },
+        { status: 403 },
+      );
+    }
+
     const body = await req.json();
-    const { solver, creatorUsername, answers } = body;
-
-    if (!solver) {
-      return NextResponse.json(
-        { success: false, message: "solver username required" },
-        { status: 400 },
-      );
-    }
-
-    if (!creatorUsername) {
-      return NextResponse.json(
-        { success: false, message: "creatorUsername required" },
-        { status: 400 },
-      );
-    }
+    const { answers } = body;
 
     if (!Array.isArray(answers)) {
       return NextResponse.json(
@@ -38,36 +55,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find creator first (multi-tenant: creators have creatorId: null)
-    const creator = await prisma.user.findFirst({
-      where: { username: creatorUsername, role: "creator", creatorId: null },
-    });
-
-    if (!creator) {
-      return NextResponse.json(
-        { success: false, message: "Creator not found" },
-        { status: 404 },
-      );
-    }
-
-    // Find solver by username AND creatorId (multi-tenant)
-    const solverUser = await prisma.user.findFirst({
-      where: {
-        username: solver,
-        role: "solver",
-        creatorId: creator.id,
-      },
-    });
-
-    if (!solverUser) {
-      return NextResponse.json(
-        { success: false, message: "Solver not found" },
-        { status: 404 },
-      );
-    }
+    // Use authenticated user's ID directly - no username lookup needed
+    const solverId = user.id;
 
     const riddleSet = await prisma.riddleSet.findFirst({
-      where: { solverId: solverUser.id },
+      where: { solverId },
       include: {
         riddles: true,
         prize: true,
@@ -76,7 +68,7 @@ export async function POST(req: Request) {
 
     if (!riddleSet) {
       return NextResponse.json(
-        { success: false, message: "No riddles for this solver" },
+        { success: false, message: "No riddles found for your account" },
         { status: 404 },
       );
     }
