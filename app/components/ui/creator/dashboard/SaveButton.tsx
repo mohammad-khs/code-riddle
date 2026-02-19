@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "../../button";
+
 interface SaveButtonProps {
   onSave: () => void;
   message: string;
@@ -9,13 +11,13 @@ interface SaveButtonProps {
 export default function SaveButton({ onSave, message }: SaveButtonProps) {
   return (
     <div>
-      <button
+      <Button
         onClick={onSave}
         disabled={message === "Saving..."}
-        className="bg-sky-500 hover:bg-sky-600 disabled:opacity-70 text-white px-4 py-2 rounded-md"
+        variant={"default"}
       >
         Save All
-      </button>
+      </Button>
       {message && (
         <div className="mt-2 text-slate-700 dark:text-slate-200">{message}</div>
       )}

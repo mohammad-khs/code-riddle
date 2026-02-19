@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FC } from "react";
+import { Button } from "../ui/button";
 
 interface DesktopNavLinksProps {
   user: { username: string; userType: string } | null;
@@ -70,20 +71,12 @@ const DesktopNavLinks: FC<DesktopNavLinksProps> = ({
             {user.userType}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="text-xs bg-red-500 hover:bg-red-600 focus:bg-red-600 text-white px-3 py-1.5 rounded transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-        >
+        <Button type="button" variant={"destructive"} size={"sm"} onClick={onLogout}>
           Logout
-        </button>
-        <button
-          type="button"
-          onClick={onLogoutAll}
-          className="text-xs bg-red-700 hover:bg-red-800 focus:bg-red-800 text-white px-3 py-1.5 rounded transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2"
-        >
-          Logout All
-        </button>
+        </Button>
+        <Button type="button" variant={"destructive"} size={"sm"} onClick={onLogoutAll}>
+          Logout_All
+        </Button>
       </div>
     )}
   </div>

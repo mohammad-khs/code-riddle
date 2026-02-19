@@ -50,9 +50,9 @@ export default function SolverLogin() {
     <AuthForm
       title="Login as Solver"
       subtitle={
-        <div className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        <span className="text-sm text-slate-600 dark:text-slate-400 mb-4">
           Enter your credentials and your creator&apos;s username
-        </div>
+        </span>
       }
       username={username}
       setUsername={setUsername}
