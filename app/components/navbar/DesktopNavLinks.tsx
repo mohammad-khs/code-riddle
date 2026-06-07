@@ -14,27 +14,27 @@ const DesktopNavLinks: FC<DesktopNavLinksProps> = ({
   onLogoutAll,
 }) => (
   <div className="hidden md:flex items-center gap-6">
-    <nav className="flex items-center gap-4 text-sm text-slate-700 dark:text-slate-200">
+    <nav className="flex items-center gap-5 text-sm font-medium text-slate-300">
       {!user ? (
         <>
           <Link
             href="/creator/register"
-            className="hover:underline focus:underline"
+            className="hover:text-blue-400 transition-colors"
           >
             Creator Register
           </Link>
           <Link
             href="/creator/login"
-            className="hover:underline focus:underline"
+            className="hover:text-blue-400 transition-colors"
           >
             Creator Login
           </Link>
-          <span className="text-gray-400" aria-hidden="true">
+          <span className="text-slate-700" aria-hidden="true">
             |
           </span>
           <Link
             href="/solver/login"
-            className="hover:underline focus:underline"
+            className="hover:text-blue-400 transition-colors"
           >
             Solver Login
           </Link>
@@ -43,39 +43,52 @@ const DesktopNavLinks: FC<DesktopNavLinksProps> = ({
         <>
           <Link
             href="/creator/dashboard"
-            className="hover:underline focus:underline"
+            className="hover:text-blue-400 transition-colors"
           >
             Dashboard
           </Link>
           <Link
             href="/creator/register-solver"
-            className="hover:underline focus:underline"
+            className="hover:text-blue-400 transition-colors"
           >
             Register Solver
           </Link>
         </>
       ) : (
-        <Link href="/solver/solve" className="hover:underline focus:underline">
+        <Link
+          href="/solver/solve"
+          className="hover:text-blue-400 transition-colors"
+        >
           Solve
         </Link>
       )}
     </nav>
 
     {user && (
-      <div className="flex items-center gap-4 text-sm border-l border-gray-300 dark:border-slate-600 pl-6">
+      <div className="flex items-center gap-4 text-sm border-l border-slate-700 pl-6">
         <div className="text-right">
-          <div className="font-medium text-slate-900 dark:text-slate-100">
-            {user.username}
-          </div>
-          <div className="text-xs text-slate-600 dark:text-slate-400 capitalize">
+          <div className="font-medium text-slate-50">{user.username}</div>
+          <div className="text-xs text-blue-400 capitalize">
             {user.userType}
           </div>
         </div>
-        <Button type="button" variant={"destructive"} size={"sm"} onClick={onLogout}>
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          onClick={onLogout}
+          className="bg-rose-600/90 hover:bg-rose-600 text-white border-none"
+        >
           Logout
         </Button>
-        <Button type="button" variant={"destructive"} size={"sm"} onClick={onLogoutAll}>
-          Logout_All
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          onClick={onLogoutAll}
+          className="bg-rose-900/80 hover:bg-rose-800 text-rose-100 border-none"
+        >
+          Logout All
         </Button>
       </div>
     )}
