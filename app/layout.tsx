@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "./components/navbar/NavBar";
 import "./style/globals.css";
+// اگر style/bgTest.css نیازی نیست، بهتر است حذف شود تا با پس‌زمینه سورمه‌ای تداخل نداشته باشد
 import "./style/bgTest.css";
 import Footer from "./components/footer/footer";
 
@@ -28,12 +29,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen background-pattern bg-fixed`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-slate-950 text-slate-50`}
       >
         <NavBar isPrize={false} />
-          <main className="flex-1 flex items-center justify-center px-6 py-8">
-            <div className="max-w-[1080px] w-screen">{children}</div>
-          </main>
+        <main className="flex-1 flex items-center justify-center px-6 py-8 relative z-10">
+          <div className="max-w-[1080px] w-full">{children}</div>
+        </main>
         <Footer />
       </body>
     </html>
