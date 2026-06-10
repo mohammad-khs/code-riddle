@@ -5,20 +5,25 @@ import { getSessionToken } from "@/lib/auth/cookies";
 
 export function proxy(req: NextRequest) {
   const token = getSessionToken(req);
+  const pathname = req.nextUrl.pathname;
 
   // No token - redirect to appropriate login
   if (!token) {
-    const pathname = req.nextUrl.pathname;
-    const loginUrl = pathname.startsWith("/solver")
-      ? new URL("/solver/login", req.url)
-      : new URL("/creator/login", req.url);
-    return NextResponse.redirect(loginUrl);
+    if (pathname.startsWith("/solver")) {
+      return NextResponse.redirect(new URL("/solver/login", req.url));
+    }
+    if (pathname.startsWith("/creator")) {
+      return NextResponse.redirect(new URL("/creator/login", req.url));
+    }
+    
   }
 
   // Token exists - pass it to downstream via header
   // Actual session validation happens in API routes/server components
   const response = NextResponse.next();
-  response.headers.set("x-session-token", token);
+  if (token) {
+    response.headers.set("x-session-token", token);
+  }
 
   return response;
 }

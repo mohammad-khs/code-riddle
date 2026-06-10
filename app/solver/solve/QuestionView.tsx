@@ -9,6 +9,7 @@ interface QuestionViewProps {
   feedback: string;
   isLoading: boolean;
   mainMusicPlaying: boolean;
+  mainMusic: string;
   onAnswerChange: (answer: string) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onToggleMainMusic: () => void;
@@ -24,6 +25,7 @@ export default function QuestionView({
   onAnswerChange,
   onSubmit,
   onToggleMainMusic,
+  mainMusic,
 }: QuestionViewProps) {
   const isFeedbackCorrect = feedback.startsWith("✓");
 
@@ -70,11 +72,13 @@ export default function QuestionView({
         )}
       </section>
 
-      <MusicControlButton
-        isPlaying={mainMusicPlaying}
-        onToggle={onToggleMainMusic}
-        label={mainMusicPlaying ? "Pause main music" : "Play main music"}
-      />
+      {mainMusic && (
+        <MusicControlButton
+          isPlaying={mainMusicPlaying}
+          onToggle={onToggleMainMusic}
+          label={mainMusicPlaying ? "Pause main music" : "Play main music"}
+        />
+      )}
     </div>
   );
 }

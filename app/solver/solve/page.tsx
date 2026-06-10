@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Loader from "@/app/components/ui/Loader";
 import QuestionView from "./QuestionView";
@@ -14,7 +14,7 @@ export default function SolverSolve() {
   // add a universal fetcher
   // use next form for database update and auth
   // not using types correctly
-  // there cannot be main music which is riddle music and no riddles 
+  // there cannot be main music which is riddle music and no riddles
   const router = useRouter();
 
   const [riddles, setRiddles] = useState<Riddle[]>([]);
@@ -56,9 +56,36 @@ export default function SolverSolve() {
       });
   }, [router]);
 
+  const finish = useCallback(
+    async (ans: string[]) => {
+      if (!username || !creatorUsername) return;
+
+      setIsLoading(true);
+
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          solver: username,
+          creatorUsername,
+          answers: ans,
+        }),
+      });
+
+      const j = await res.json();
+
+      if (j.success && j.prize) {
+        setResult(j.prize);
+      }
+
+      setIsLoading(false);
+    },
+    [username, creatorUsername],
+  );
+
   useEffect(() => {
     if (!authorized || !username || !creatorUsername) return;
-    // Fetch riddles for this solver, scoped to the correct creator
+
     fetch(
       `/api/riddles?solver=${encodeURIComponent(username)}&creator=${encodeURIComponent(creatorUsername)}`,
     )
@@ -66,18 +93,17 @@ export default function SolverSolve() {
       .then((d) => {
         const riddleSet = d.riddleSet || {};
         const riddleList = riddleSet.riddles || [];
+
         setRiddles(riddleList);
-        setMainMusic(riddleSet.mainprizeMusic || "");
-        // If no riddles, fetch the prize directly
+        setMainMusic(riddleSet.mainMusic);
+
         if (riddleList.length === 0) {
           finish([]);
         } else {
           setIsLoading(false);
         }
-      })
-      .catch(() => {});        
-      setIsLoading(false);
-  }, [authorized, username, creatorUsername]);
+      });
+  }, [authorized, username, creatorUsername, finish]);
 
   function submitAnswer(e: any) {
     e.preventDefault();
@@ -121,21 +147,6 @@ export default function SolverSolve() {
     }
   }
 
-  async function finish(ans: string[]) {
-    if (!username || !creatorUsername) return;
-        setIsLoading(true);
-    const res = await fetch("/api/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ solver: username, creatorUsername, answers: ans }),
-    });
-    const j = await res.json();
-    if (j.success && j.prize) {
-      setResult(j.prize);
-    }
-    setIsLoading(false);
-  }
-
   useEffect(() => {
     // when main music is set, try to autoplay
     if (mainMusic && mainAudioRef.current) {
@@ -149,34 +160,35 @@ export default function SolverSolve() {
           );
         }
       } catch (e) {
-        console.error(e)
+        console.error(e);
         // ignore autoplay errors
       }
     }
   }, [mainMusic]);
 
   useEffect(() => {
-    // when prize arrives and has music, try to autoplay and pause main music
-    if (result && result.music) {
-      try {
-        if (mainAudioRef.current && isMainPlaying) {
-          mainAudioRef.current.pause();
-          setIsMainPlaying(false);
-        }
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.src = result.music;
-          const p = audioRef.current.play();
-          if (p && typeof p.then === "function") {
-            p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-          }
-        }
-      } catch (e) {
-                console.error(e)
-        // ignore autoplay errors
+    if (!result?.music) return;
+
+    try {
+      // Pause main music without checking state
+      if (mainAudioRef.current) {
+        mainAudioRef.current.pause();
       }
+
+      // Play prize music
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = result.music;
+
+        const p = audioRef.current.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        }
+      }
+    } catch (e) {
+      console.error(e);
     }
-  }, [result, isMainPlaying]);
+  }, [result]);
 
   function togglePlay() {
     if (!audioRef.current) return;
@@ -248,6 +260,7 @@ export default function SolverSolve() {
         onAnswerChange={setCurrentAnswer}
         onSubmit={submitAnswer}
         onToggleMainMusic={toggleMainPlay}
+        mainMusic={mainMusic}
       />
       {mainMusic && <audio ref={mainAudioRef} className="hidden" />}
     </>
