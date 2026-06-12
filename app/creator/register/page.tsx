@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/ui/form/AuthForm";
 
@@ -10,7 +10,7 @@ export default function CreatorRegister() {
   const [msg, setMsg] = useState("");
   const router = useRouter();
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMsg("");
 
@@ -28,8 +28,6 @@ export default function CreatorRegister() {
     const j = await res.json();
 
     if (j.success) {
-      // Session is handled via HttpOnly cookie - no need to store token
-      // Auto-login after registration
       const loginRes = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,7 +40,7 @@ export default function CreatorRegister() {
       });
       const loginData = await loginRes.json();
       if (loginData.success) {
-        router.push("/creator/dashboard");
+        router.push("/creator/dashboard/manage-solver");
       } else {
         router.push("/creator/login");
       }
