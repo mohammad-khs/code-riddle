@@ -18,14 +18,14 @@ export const FilePreview: FC<FilePreviewProps> = ({
           alt="Preview"
           width={400}
           height={300}
-          className="max-h-48 w-full rounded-lg object-contain border"
+          className="max-h-48 w-full rounded-xl object-contain border border-slate-700"
         />
       )}
 
       {file.type.startsWith("audio/") && (
         <audio
           controls
-          className="w-full mt-2 rounded-lg"
+          className="w-full mt-2 rounded-xl"
         >
           <source src={previewUrl} />
           Your browser does not support the audio element.

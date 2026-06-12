@@ -65,13 +65,13 @@ const FileUploadField: FC<FileUploadFieldProps> = ({
 
   return (
     <div
-      className={`rounded-xl border-2 border-dashed p-4 transition ${
+      className={`rounded-2xl border-2 border-dashed p-5 transition ${
         dragging
-          ? "border-sky-400 bg-sky-50 dark:bg-sky-900/20"
-          : "border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40"
+          ? "border-sky-400 bg-sky-900/20"
+          : "border-slate-700 bg-slate-900/40"
       }`}
     >
-      <label className="block mb-2 text-sm font-medium">{label}</label>
+      <label className="block mb-2 text-sm font-semibold text-slate-300">{label}</label>
 
       <input
         title="upload-input"

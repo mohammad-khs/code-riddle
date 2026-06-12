@@ -42,8 +42,8 @@ export const UploadArea: FC<UploadAreaProps> = ({
         </Button>
 
         {file && (
-          <div className="flex items-center gap-2 max-w-full rounded-lg bg-white dark:bg-slate-800 px-3 py-2 text-sm">
-            <span className="max-w-[200px] truncate text-slate-700 dark:text-slate-200">
+          <div className="flex items-center gap-2 max-w-full rounded-xl bg-slate-800/60 px-3 py-2 text-sm">
+            <span className="max-w-[200px] truncate text-slate-300">
               {file.name}
             </span>
             <Button

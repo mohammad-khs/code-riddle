@@ -7,7 +7,7 @@ type UploadKey = "mainMusic" | "prizeMusic" | "backgroundImage";
 const labels: Record<UploadKey, string> = {
   mainMusic: "Main Music",
   prizeMusic: "Prize Music",
-  backgroundImage: "Background Music",
+  backgroundImage: "Background Image",
 };
 
 interface MediaSelectorDropdownProps {
@@ -25,21 +25,21 @@ export default function MediaSelectorDropdown({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-        Select media uploads (optional)
+      <label className="block text-sm font-semibold text-slate-300 mb-1.5">
+        Select Media Uploads (Optional)
       </label>
 
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 flex justify-between items-center hover:border-slate-400 dark:hover:border-slate-500 transition"
+        className="cursor-pointer rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 flex justify-between items-center hover:border-slate-600 transition"
       >
-        <span className="text-slate-700 dark:text-slate-300">
+        <span className="text-slate-300">
           {selected.length === 0
             ? "None selected"
-            : `${selected.length} Selected item`}
+            : `${selected.length} item${selected.length > 1 ? "s" : ""} selected`}
         </span>
         <svg
-          className={`w-5 h-5 text-slate-500 transition-transform ${
+          className={`w-5 h-5 text-slate-400 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
           fill="none"
@@ -56,16 +56,16 @@ export default function MediaSelectorDropdown({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-lg overflow-hidden">
+        <div className="absolute z-10 mt-2 w-full rounded-xl border border-slate-700 bg-slate-900/80 shadow-xl overflow-hidden">
           {options.map((key) => (
             <div
               key={key}
               onClick={() => onToggle(key)}
-              className="px-4 py-3 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between transition"
+              className="px-4 py-3 text-sm cursor-pointer hover:bg-slate-800 flex items-center justify-between transition"
             >
-              <span>{labels[key]}</span>
+              <span className="text-slate-300">{labels[key]}</span>
               {selected.includes(key) && (
-                <span className="text-sky-500 font-bold">✔</span>
+                <span className="text-sky-400 font-bold">✔</span>
               )}
             </div>
           ))}
