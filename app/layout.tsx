@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "./components/navbar/NavBar";
 import "./style/globals.css";
-// اگر style/bgTest.css نیازی نیست، بهتر است حذف شود تا با پس‌زمینه سورمه‌ای تداخل نداشته باشد
-import "./style/bgTest.css";
-import Footer from "./components/footer/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +32,6 @@ export default function RootLayout({
         <main className="flex-1 flex items-center justify-center px-6 py-8 relative z-10">
           <div className="max-w-[1080px] w-full">{children}</div>
         </main>
-        <Footer />
       </body>
     </html>
   );
