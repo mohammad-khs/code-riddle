@@ -239,7 +239,7 @@ export default function SolverSolve() {
     return (
       <div
         dir="rtl"
-        className="h-svh flex items-center justify-center max-w-3xl mx-auto p-6 text-center text-2xl"
+        className="flex items-center justify-center max-w-3xl mx-auto p-6 text-center text-2xl"
       >
         Wait a moment 😊
       </div>

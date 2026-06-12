@@ -6,7 +6,7 @@ interface LoaderProps {
 
 const Loader: FC<LoaderProps> = ({ message }) => {
   return (
-    <div className="h-svh flex items-center justify-center">
+    <div className="flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="relative w-12 h-12">
           <div className="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-slate-700"></div>
