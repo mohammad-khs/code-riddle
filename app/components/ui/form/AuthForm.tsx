@@ -12,7 +12,7 @@ type AuthFormProps = {
   setPassword: (value: string) => void;
   creatorUsername?: string;
   setCreatorUsername?: (value: string) => void;
-  onSubmit: (e: FormEvent) => Promise<void>;
+  onSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
   buttonText: string;
   message: string;
   isLoading?: boolean;

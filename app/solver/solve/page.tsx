@@ -105,7 +105,7 @@ export default function SolverSolve() {
       });
   }, [authorized, username, creatorUsername, finish]);
 
-  function submitAnswer(e: any) {
+  function submitAnswer(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFeedback("");
     setAnswerLoading(true);
