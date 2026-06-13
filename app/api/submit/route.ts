@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     }
 
     if (correctCount === total) {
-      const supabase = createClient();
+      const supabase = await createClient();
       const prize: Prize = riddleSet.prize || {
         id: "",
         setId: riddleSet.id,

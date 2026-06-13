@@ -117,7 +117,7 @@ export async function GET(req: Request) {
       return NextResponse.json({});
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const result = {
       solver: { id: solver.id, username: solver.username },
       creatorUsername: creator?.username,
