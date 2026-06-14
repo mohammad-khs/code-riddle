@@ -157,14 +157,14 @@ export default function ManageSolver() {
 
   if (loading || !authorized) {
     return (
-      <section className="flex items-center justify-center rounded-3xl border border-slate-800 bg-slate-900/50 p-8 text-center text-slate-300 backdrop-blur-xl">
+      <section className="flex h-full items-center justify-center rounded-3xl border border-slate-800 bg-slate-900/50 p-8 text-center text-slate-300 backdrop-blur-xl">
         Loading solver data...
       </section>
     );
   }
 
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-900/60 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
+    <section className="rounded-3xl border h-full overflow-y-auto border-slate-800 bg-slate-900/60 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
       <div className="border-b border-slate-800 bg-slate-950/50 p-6">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
           Manage Solver
