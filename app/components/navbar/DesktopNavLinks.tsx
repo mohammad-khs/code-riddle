@@ -65,22 +65,14 @@ const DesktopNavLinks: FC<DesktopNavLinksProps> = ({ user }) => {
             >
               Dashboard
             </Link>
-            <Link
-              href="/creator/register-solver"
-              className={`transition-colors ${
-                isActive("/creator/register-solver")
-                  ? "text-blue-400"
-                  : "hover:text-blue-400"
-              }`}
-            >
-              Register Solver
-            </Link>
           </>
         ) : (
           <Link
             href="/solver/solve"
             className={`transition-colors ${
-              isActive("/solver/solve") ? "text-blue-400" : "hover:text-blue-400"
+              isActive("/solver/solve")
+                ? "text-blue-400"
+                : "hover:text-blue-400"
             }`}
           >
             Solve

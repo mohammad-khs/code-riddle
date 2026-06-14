@@ -28,28 +28,45 @@ const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onClose }) => {
       <nav className="mx-auto flex max-w-[1080px] flex-col gap-2 px-6 py-6 text-sm font-medium text-slate-300">
         {!user ? (
           <>
-            <Link href="/creator/register" className={linkClass("/creator/register")} onClick={onClose}>
+            <Link
+              href="/creator/register"
+              className={linkClass("/creator/register")}
+              onClick={onClose}
+            >
               Creator Register
             </Link>
-            <Link href="/creator/login" className={linkClass("/creator/login")} onClick={onClose}>
+            <Link
+              href="/creator/login"
+              className={linkClass("/creator/login")}
+              onClick={onClose}
+            >
               Creator Login
             </Link>
             <div className="my-2 border-t border-slate-800" />
-            <Link href="/solver/login" className={linkClass("/solver/login")} onClick={onClose}>
+            <Link
+              href="/solver/login"
+              className={linkClass("/solver/login")}
+              onClick={onClose}
+            >
               Solver Login
             </Link>
           </>
         ) : user.userType === "creator" ? (
           <>
-            <Link href="/creator/dashboard" className={linkClass("/creator/dashboard")} onClick={onClose}>
+            <Link
+              href="/creator/dashboard"
+              className={linkClass("/creator/dashboard")}
+              onClick={onClose}
+            >
               Dashboard
-            </Link>
-            <Link href="/creator/register-solver" className={linkClass("/creator/register-solver")} onClick={onClose}>
-              Register Solver
             </Link>
           </>
         ) : (
-          <Link href="/solver/solve" className={linkClass("/solver/solve")} onClick={onClose}>
+          <Link
+            href="/solver/solve"
+            className={linkClass("/solver/solve")}
+            onClick={onClose}
+          >
             Solve
           </Link>
         )}
