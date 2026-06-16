@@ -1,46 +1,51 @@
+"use client";
+
 import Link from "next/link";
 import { FC } from "react";
+import { usePathname } from "next/navigation";
 
 interface MobileNavMenuProps {
   isOpen: boolean;
   user: { username: string; userType: string } | null;
-  onLogout: () => void;
-  onLogoutAll: () => void;
   onClose: () => void;
 }
 
-const MobileNavMenu: FC<MobileNavMenuProps> = ({
-  isOpen,
-  user,
-  onLogout,
-  onLogoutAll,
-  onClose,
-}) => {
+const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onClose }) => {
+  const pathname = usePathname();
+
   if (!isOpen) return null;
 
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
+  const linkClass = (href: string) =>
+    `block py-2 transition-colors ${
+      isActive(href) ? "text-blue-400" : "hover:text-blue-400"
+    }`;
+
   return (
-    <div className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur-xl absolute inset-x-0 top-full z-40 shadow-2xl">
-      <nav className="max-w-[1080px] mx-auto px-6 flex flex-col gap-2 text-sm font-medium text-slate-300 py-6">
+    <div className="absolute inset-x-0 top-full z-40 border-t border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur-xl md:hidden">
+      <nav className="mx-auto flex max-w-[1080px] flex-col gap-2 px-6 py-6 text-sm font-medium text-slate-300">
         {!user ? (
           <>
             <Link
               href="/creator/register"
-              className="hover:text-blue-400 block py-2"
+              className={linkClass("/creator/register")}
               onClick={onClose}
             >
               Creator Register
             </Link>
             <Link
               href="/creator/login"
-              className="hover:text-blue-400 block py-2"
+              className={linkClass("/creator/login")}
               onClick={onClose}
             >
               Creator Login
             </Link>
-            <div className="border-t border-slate-800 my-2" />
+            <div className="my-2 border-t border-slate-800" />
             <Link
               href="/solver/login"
-              className="hover:text-blue-400 block py-2"
+              className={linkClass("/solver/login")}
               onClick={onClose}
             >
               Solver Login
@@ -50,23 +55,16 @@ const MobileNavMenu: FC<MobileNavMenuProps> = ({
           <>
             <Link
               href="/creator/dashboard"
-              className="hover:text-blue-400 block py-2"
+              className={linkClass("/creator/dashboard")}
               onClick={onClose}
             >
               Dashboard
-            </Link>
-            <Link
-              href="/creator/register-solver"
-              className="hover:text-blue-400 block py-2"
-              onClick={onClose}
-            >
-              Register Solver
             </Link>
           </>
         ) : (
           <Link
             href="/solver/solve"
-            className="hover:text-blue-400 block py-2"
+            className={linkClass("/solver/solve")}
             onClick={onClose}
           >
             Solve
@@ -75,27 +73,13 @@ const MobileNavMenu: FC<MobileNavMenuProps> = ({
 
         {user && (
           <>
-            <div className="border-t border-slate-800 my-4" />
-            <div className="py-2 mb-2">
+            <div className="my-4 border-t border-slate-800" />
+            <div className="mb-2 py-2">
               <div className="font-medium text-slate-50">{user.username}</div>
-              <div className="text-xs text-blue-400 capitalize mt-1">
+              <div className="mt-1 text-xs capitalize text-blue-400">
                 {user.userType}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="text-sm font-bold bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 rounded-lg w-full transition-colors"
-            >
-              Logout
-            </button>
-            <button
-              type="button"
-              onClick={onLogoutAll}
-              className="text-sm font-bold bg-slate-800 hover:bg-slate-700 text-rose-400 px-4 py-2.5 rounded-lg w-full transition-colors mt-2"
-            >
-              Logout All Devices
-            </button>
           </>
         )}
       </nav>

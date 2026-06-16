@@ -64,7 +64,6 @@ export default function SolverLogin() {
       buttonText="Login as Solver"
       message={msg}
       isLoading={isLoading}
-      buttonColor="green"
     />
   );
 }

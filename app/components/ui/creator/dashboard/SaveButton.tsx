@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "../../button";
 
 interface SaveButtonProps {
@@ -9,17 +7,22 @@ interface SaveButtonProps {
 }
 
 export default function SaveButton({ onSave, message }: SaveButtonProps) {
+  const isSaving = message === "Saving...";
+
   return (
-    <div>
+    <div className="flex items-center gap-4">
       <Button
         onClick={onSave}
-        disabled={message === "Saving..."}
-        variant={"default"}
+        disabled={isSaving}
       >
         Save All
       </Button>
       {message && (
-        <div className="mt-2 text-slate-700 dark:text-slate-200">{message}</div>
+        <span className={`text-sm font-medium ${
+          isSaving ? "text-blue-300" : "text-emerald-400"
+        }`}>
+          {message}
+        </span>
       )}
     </div>
   );

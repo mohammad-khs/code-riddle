@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SolverSelector from "@/app/components/ui/creator/dashboard/SolverSelector";
@@ -7,6 +8,11 @@ import PrizeInput from "@/app/components/ui/creator/dashboard/PrizeInput";
 import MediaUploadSection from "@/app/components/ui/creator/dashboard/media-selector/MediaUploadSection";
 import SaveButton from "@/app/components/ui/creator/dashboard/SaveButton";
 import { uploadFileDirectly } from "@/utils/supabase/direct-upload";
+
+interface RiddleDraft {
+  question: string;
+  answer: string;
+}
 
 async function uploadFile(file: File): Promise<string> {
   const result = await uploadFileDirectly(file);
@@ -18,9 +24,9 @@ async function uploadFile(file: File): Promise<string> {
   return result.path || "";
 }
 
-export default function CreatorDashboard() {
+export default function ManageSolver() {
   const router = useRouter();
-  const [riddles, setRiddles] = useState<any[]>([]);
+  const [riddles, setRiddles] = useState<RiddleDraft[]>([]);
   const [prizeLetter, setPrizeLetter] = useState("");
   const [mainMusicFile, setMainMusicFile] = useState<File | null>(null);
   const [musicFile, setMusicFile] = useState<File | null>(null);
@@ -35,14 +41,14 @@ export default function CreatorDashboard() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    // Validate session with the server
     fetch("/api/auth/validate")
       .then((res) => res.json())
       .then((data) => {
-        if (!data.valid || data.user.role !== "creator") {
+        if (!data.valid || data.user?.role !== "creator") {
           router.push("/creator/login");
           return;
         }
+
         setUsername(data.user.username);
         setAuthorized(true);
         setLoading(false);
@@ -54,7 +60,7 @@ export default function CreatorDashboard() {
 
   useEffect(() => {
     if (!authorized || !username) return;
-    // Fetch solvers created by this creator
+
     fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,6 +77,7 @@ export default function CreatorDashboard() {
 
   useEffect(() => {
     if (!solver) return;
+
     fetch(
       `/api/riddles?solver=${encodeURIComponent(solver)}&creator=${encodeURIComponent(username)}`,
     )
@@ -87,7 +94,7 @@ export default function CreatorDashboard() {
     setRiddles([...riddles, { question: "", answer: "" }]);
   }
 
-  function updateRiddle(i: number, field: string, value: string) {
+  function updateRiddle(i: number, field: keyof RiddleDraft, value: string) {
     const copy = [...riddles];
     copy[i] = { ...copy[i], [field]: value };
     setRiddles(copy);
@@ -104,11 +111,14 @@ export default function CreatorDashboard() {
       setMsg("Please select a solver");
       return;
     }
+
     if (!username) {
       setMsg("Creator username not found");
       return;
     }
+
     setMsg("Saving...");
+
     let mainMusicPath = undefined;
     if (mainMusicFile) {
       mainMusicPath = await uploadFile(mainMusicFile);
@@ -123,6 +133,7 @@ export default function CreatorDashboard() {
     if (backgroundImageFile) {
       backgroundImagePath = await uploadFile(backgroundImageFile);
     }
+
     const res = await fetch("/api/riddles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -137,21 +148,37 @@ export default function CreatorDashboard() {
         backgroundImagePath,
       }),
     });
+
     const j = await res.json();
+
     if (j.success) setMsg("Saved");
     else setMsg(j.message || "Error saving");
   }
 
-  if (!authorized) {
-    return null;
+  if (loading || !authorized) {
+    return (
+      <section className="flex h-full items-center justify-center rounded-3xl border border-slate-800 bg-slate-900/50 p-8 text-center text-slate-300 backdrop-blur-xl">
+        Loading solver data...
+      </section>
+    );
   }
 
   return (
-    <section className="max-w-3xl mx-auto bg-white dark:bg-black/35 backdrop-blur-md border dark:border-slate-700 rounded-lg p-6">
-      <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-        Creator Dashboard
-      </h2>
-      <div className="space-y-4">
+    <section className="rounded-3xl border h-full overflow-y-auto border-slate-800 bg-slate-900/60 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
+      <div className="border-b border-slate-800 bg-slate-950/50 p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
+          Manage Solver
+        </p>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-50">
+          Riddle Builder
+        </h2>
+        <p className="mt-2 text-sm text-slate-400">
+          Select a solver, edit the riddles, attach media, and save the
+          experience.
+        </p>
+      </div>
+
+      <div className="space-y-5 p-6">
         <SolverSelector
           solvers={solvers}
           selectedSolver={solver}
