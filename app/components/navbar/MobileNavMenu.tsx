@@ -90,14 +90,16 @@ const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onClose }) => {
                 {user.userType}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/35 px-4 py-2 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-600/10 hover:text-rose-50"
-            >
-              <LogOut className="h-4 w-4" />
-              Log Out
-            </button>
+            {user?.userType === "solver" && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/35 px-4 py-2 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-600/10 hover:text-rose-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </button>
+            )}
           </>
         )}
       </nav>
