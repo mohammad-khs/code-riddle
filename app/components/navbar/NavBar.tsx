@@ -33,7 +33,7 @@ const NavBar: FC = () => {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-lg">
+    <nav className="absolute top-0 left-0 right-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-lg">
       <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-4">
         <Logo />
         <HamburgerButton
