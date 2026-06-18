@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FC } from "react";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 interface DesktopNavLinksProps {
   user: { username: string; userType: string } | null;
@@ -13,6 +14,15 @@ const DesktopNavLinks: FC<DesktopNavLinksProps> = ({ user }) => {
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
+
+  async function handleLogout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
+    window.location.href = "/";
+  }
 
   return (
     <div className="hidden md:flex items-center gap-6">
@@ -88,6 +98,14 @@ const DesktopNavLinks: FC<DesktopNavLinksProps> = ({ user }) => {
               {user.userType}
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/35 px-3 py-1.5 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-600/10 hover:text-rose-50"
+          >
+            <LogOut className="h-4 w-4" />
+            Log Out
+          </button>
         </div>
       )}
     </div>
