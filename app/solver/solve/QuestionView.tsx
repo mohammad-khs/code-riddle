@@ -1,6 +1,7 @@
 import { Button } from "@/app/components/ui/button";
 import MusicControlButton from "@/app/components/ui/MusicControlButton";
 import { Riddle } from "@/types/solver-solve";
+import Image from "next/image";
 
 interface QuestionViewProps {
   riddle: Riddle;
@@ -50,7 +51,7 @@ export default function QuestionView({
                 controls
               />
             ) : (
-              <img
+              <Image
                 src={riddle.media}
                 alt="Riddle visual"
                 className="h-full w-full object-cover"

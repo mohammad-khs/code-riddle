@@ -6,8 +6,8 @@ export default function SolverSolveLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-50">
-      <main className="flex flex-col items-center px-6 pt-12">{children}</main>
+    <div className="bg-slate-950 text-slate-50 relative">
+      <main className="flex flex-col justify-center items-center">{children}</main>
     </div>
   );
 }

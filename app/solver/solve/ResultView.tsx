@@ -24,7 +24,7 @@ export default function ResultView({
     <>
       <div
         style={backgroundStyle}
-        className="flex min-h-dvh w-full max-w-[1080px] items-start justify-center bg-slate-950/95 px-6 pt-12"
+        className="flex h-dvh w-full max-w-[1080px] items-center justify-center bg-slate-950/95"
       >
         <section className="w-full max-w-2xl rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
           <header className="border-b border-slate-800 pb-4 mb-6">
