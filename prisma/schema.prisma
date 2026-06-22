@@ -1,55 +1,109 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  username  String   @unique
+  username  String
   password  String
-  userType  String  // "creator" or "solver"
+  role      String                    // "creator" | "solver"
+  creatorId String?  @db.ObjectId
+  isActive  Boolean  @default(true)
+
+  email     String?                   // just for creator
+  phone     String?                   // just for creator
+
   createdAt DateTime @default(now())
-  createdBy String?  // for solvers, who created them
-  
+
+  sessions       Session[]            // Relations
+  passwordResets PasswordReset[]      // Relations
+
+  solverRiddleSets  RiddleSet[] @relation("SolverRiddleSets")
+  creatorRiddleSets RiddleSet[] @relation("CreatorRiddleSets")
+
+  @@unique([username, creatorId])     // for every Creator userName must be unique
+  @@index([role])                     // query for fast role-based
   @@map("users")
 }
 
-model RiddleSet {
+model Session {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  solver    String  // username of solver
-  createdBy String  // username of creator
-  prize     Prize?
-  riddles   Riddle[]
-  mainMusic String? //new
+  userId    String   @db.ObjectId
+  tokenHash String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  
+  ip        String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])                // for TTL
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  otpHash   String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+
+model RiddleSet {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  solverId   String   @db.ObjectId
+  creatorId  String   @db.ObjectId
+
+  solver  User @relation("SolverRiddleSets", fields: [solverId], references: [id])
+  creator User @relation("CreatorRiddleSets", fields: [creatorId], references: [id])
+
+  riddles   Riddle[]
+  prize     Prize?
+  mainMusic String?
+  createdAt DateTime @default(now())
+
+  @@index([solverId])
+  @@index([creatorId])
   @@map("riddle_sets")
 }
 
 model Riddle {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  riddleSet  RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
-  setId      String   @db.ObjectId
-  question   String
-  answer     String
-  createdAt  DateTime @default(now())
-  
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  setId     String   @db.ObjectId
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+
+  riddleSet RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@index([setId])
   @@map("riddles")
 }
 
 model Prize {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  riddleSet RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
   setId     String   @unique @db.ObjectId
   letter    String
-  music     String?   // URL to uploaded music file
-  createdAt DateTime  @default(now())
-  backgroundImage String?  // new
+  music     String?
+  backgroundImage String?
+  createdAt DateTime @default(now())
+
+  riddleSet RiddleSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
   @@map("prizes")
 }

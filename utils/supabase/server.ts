@@ -1,26 +1,26 @@
-// server.ts - server-only Supabase client
-import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js';
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-let supabaseServerClient: SupabaseClient | null = null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-/**
- * Returns a Supabase client that uses the SERVICE ROLE KEY.
- * Important: only import/usage from server code (API routes, getServerSideProps)
- */
-export function createClient(): SupabaseClient {
-  if (supabaseServerClient) return supabaseServerClient;
+export const createClient = async () => {
+  const cookieStore = await cookies();
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceKey) {
-    throw new Error('Missing SUPABASE environment variables. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.');
-  }
-
-  supabaseServerClient = createSupabaseClient(url, serviceKey, {
-    // optional: set global fetch to node-fetch if needed by your runtime
-    // For next.js serverless Node runtime the default is fine.
+  return createServerClient(supabaseUrl!, supabaseKey!, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // Ignore cookie writes in contexts where response cookies cannot be set.
+        }
+      },
+    },
   });
-
-  return supabaseServerClient;
-}
+};
