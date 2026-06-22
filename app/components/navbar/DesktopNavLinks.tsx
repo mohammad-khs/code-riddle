@@ -1,59 +1,117 @@
+"use client";
+
 import Link from "next/link";
 import { FC } from "react";
+import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 interface DesktopNavLinksProps {
   user: { username: string; userType: string } | null;
-  onLogout: () => void;
 }
 
-const DesktopNavLinks: FC<DesktopNavLinksProps> = ({ user, onLogout }) => (
-  <div className="hidden md:flex items-center gap-6">
-    <nav className="flex items-center gap-4 text-sm text-slate-700 dark:text-slate-200">
-      {!user ? (
-        <>
-          <Link href="/creator/register" className="hover:underline focus:underline">
-            Creator Register
-          </Link>
-          <Link href="/creator/login" className="hover:underline focus:underline">
-            Creator Login
-          </Link>
-          <span className="text-gray-400" aria-hidden="true">|</span>
-          <Link href="/solver/login" className="hover:underline focus:underline">
-            Solver Login
-          </Link>
-        </>
-      ) : user.userType === "creator" ? (
-        <>
-          <Link href="/creator/dashboard" className="hover:underline focus:underline">
-            Dashboard
-          </Link>
-          <Link href="/creator/register-solver" className="hover:underline focus:underline">
-            Register Solver
-          </Link>
-        </>
-      ) : (
-        <Link href="/solver/solve" className="hover:underline focus:underline">
-          Solve
-        </Link>
-      )}
-    </nav>
+const DesktopNavLinks: FC<DesktopNavLinksProps> = ({ user }) => {
+  const pathname = usePathname();
 
-    {user && (
-      <div className="flex items-center gap-4 text-sm border-l border-gray-300 dark:border-slate-600 pl-6">
-        <div className="text-right">
-          <div className="font-medium text-slate-900 dark:text-slate-100">{user.username}</div>
-          <div className="text-xs text-slate-600 dark:text-slate-400 capitalize">{user.userType}</div>
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
+  async function handleLogout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
+    window.location.href = "/";
+  }
+
+  return (
+    <div className="hidden md:flex items-center gap-6">
+      <nav className="flex items-center gap-5 text-sm font-medium text-slate-300">
+        {!user ? (
+          <>
+            <Link
+              href="/creator/register"
+              className={`transition-colors ${
+                isActive("/creator/register")
+                  ? "text-blue-400"
+                  : "hover:text-blue-400"
+              }`}
+            >
+              Creator Register
+            </Link>
+            <Link
+              href="/creator/login"
+              className={`transition-colors ${
+                isActive("/creator/login")
+                  ? "text-blue-400"
+                  : "hover:text-blue-400"
+              }`}
+            >
+              Creator Login
+            </Link>
+            <span className="text-slate-700" aria-hidden="true">
+              |
+            </span>
+            <Link
+              href="/solver/login"
+              className={`transition-colors ${
+                isActive("/solver/login")
+                  ? "text-blue-400"
+                  : "hover:text-blue-400"
+              }`}
+            >
+              Solver Login
+            </Link>
+          </>
+        ) : user.userType === "creator" ? (
+          <>
+            <Link
+              href="/creator/dashboard"
+              className={`transition-colors ${
+                isActive("/creator/dashboard")
+                  ? "text-blue-400"
+                  : "hover:text-blue-400"
+              }`}
+            >
+              Dashboard
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/solver/solve"
+            className={`transition-colors ${
+              isActive("/solver/solve")
+                ? "text-blue-400"
+                : "hover:text-blue-400"
+            }`}
+          >
+            Solve
+          </Link>
+        )}
+      </nav>
+
+      {user && (
+        <div className="flex items-center gap-3 border-l border-slate-700 pl-6 text-sm">
+          <div className="text-right">
+            <div className="font-medium text-slate-50">{user.username}</div>
+            <div className="text-xs capitalize text-blue-400">
+              {user.userType}
+            </div>
+          </div>
+          {user?.userType === "solver" && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/35 px-3 py-1.5 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-600/10 hover:text-rose-50"
+            >
+              <LogOut className="h-4 w-4" />
+              Log Out
+            </button>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="text-xs bg-red-500 hover:bg-red-600 focus:bg-red-600 text-white px-3 py-1.5 rounded transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-        >
-          Logout
-        </button>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+};
 
 export default DesktopNavLinks;

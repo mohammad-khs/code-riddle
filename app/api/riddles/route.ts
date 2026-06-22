@@ -1,58 +1,168 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { deleteFileFromSupabase } from "@/utils/supabase/server-delete";
+import { getSessionToken } from "@/lib/auth/cookies";
+import { validateSession } from "@/lib/auth/session";
 
-const prisma = new PrismaClient();
+interface RiddleInput {
+  question: string;
+  answer: string;
+}
+
+// Helper to get authenticated user
+async function getAuthenticatedUser(req: Request) {
+  const token = getSessionToken(req);
+  if (!token) return null;
+  return validateSession(token);
+}
 
 // GET /api/riddles?solver=username
+// Authorization:
+// - Creators: can only see riddles for their own solvers
+// - Solvers: can only see their own riddles
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const solver = searchParams.get("solver");
-
-  if (!solver) return NextResponse.json({});
-
   try {
+    // Authenticate user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const solverUsername = searchParams.get("solver");
+
+    if (!solverUsername) {
+      return NextResponse.json(
+        { success: false, message: "solver username required" },
+        { status: 400 },
+      );
+    }
+
+    let solver;
+    let creator;
+
+    if (user.role === "creator") {
+      // Creator mode: can only access their own solvers
+      creator = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+
+      if (!creator) {
+        return NextResponse.json(
+          { success: false, message: "Creator not found" },
+          { status: 404 },
+        );
+      }
+
+      // Find solver that belongs to this creator
+      solver = await prisma.user.findFirst({
+        where: {
+          username: solverUsername,
+          role: "solver",
+          creatorId: creator.id,
+        },
+      });
+    } else if (user.role === "solver") {
+      // Solver mode: can only see their own riddles
+      if (user.username !== solverUsername) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Forbidden: can only access your own riddles",
+          },
+          { status: 403 },
+        );
+      }
+
+      solver = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          creatorRiddleSets: {
+            include: {
+              creator: true,
+            },
+          },
+        },
+      });
+
+      if (solver?.creatorId) {
+        creator = await prisma.user.findUnique({
+          where: { id: solver.creatorId },
+        });
+      }
+    } else {
+      return NextResponse.json(
+        { success: false, message: "Invalid role" },
+        { status: 403 },
+      );
+    }
+
+    if (!solver) {
+      return NextResponse.json({});
+    }
+
+    // Get the riddle set for this solver
     const riddleSet = await prisma.riddleSet.findFirst({
-      where: { solver },
+      where: { solverId: solver.id },
       include: {
         riddles: true,
         prize: true,
       },
     });
-    const supabase = createClient();
-    if (riddleSet?.mainMusic) {
+
+    if (!riddleSet) {
+      return NextResponse.json({});
+    }
+
+    const supabase = await createClient();
+    const result = {
+      solver: { id: solver.id, username: solver.username },
+      creatorUsername: creator?.username,
+      riddleSet: { ...riddleSet },
+    };
+
+    // Generate signed URLs for media files
+    if (result.riddleSet.mainMusic) {
       try {
         const { data } = await supabase.storage
           .from("uploads")
-          .createSignedUrl(riddleSet.mainMusic, 3600);
-        riddleSet.mainMusic = data?.signedUrl || riddleSet.mainMusic;
+          .createSignedUrl(result.riddleSet.mainMusic, 3600);
+        result.riddleSet.mainMusic =
+          data?.signedUrl || result.riddleSet.mainMusic;
       } catch (e) {
         console.error("Error generating signed URL for mainMusic:", e);
       }
     }
-    if (riddleSet?.prize?.music) {
+
+    if (result.riddleSet.prize?.music) {
       try {
         const { data } = await supabase.storage
           .from("uploads")
-          .createSignedUrl(riddleSet.prize.music, 3600);
-        riddleSet.prize.music = data?.signedUrl || riddleSet.prize.music;
+          .createSignedUrl(result.riddleSet.prize.music, 3600);
+        result.riddleSet.prize.music =
+          data?.signedUrl || result.riddleSet.prize.music;
       } catch (e) {
         console.error("Error generating signed URL for prize music:", e);
       }
     }
-    if (riddleSet?.prize?.backgroundImage) {
+
+    if (result.riddleSet.prize?.backgroundImage) {
       try {
         const { data } = await supabase.storage
           .from("uploads")
-          .createSignedUrl(riddleSet.prize.backgroundImage, 3600);
-        riddleSet.prize.backgroundImage =
-          data?.signedUrl || riddleSet.prize.backgroundImage;
+          .createSignedUrl(result.riddleSet.prize.backgroundImage, 3600);
+        result.riddleSet.prize.backgroundImage =
+          data?.signedUrl || result.riddleSet.prize.backgroundImage;
       } catch (e) {
         console.error("Error generating signed URL for background image:", e);
       }
     }
-    return NextResponse.json(riddleSet || {});
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching riddles:", error);
     return NextResponse.json(
@@ -62,69 +172,90 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/riddles { action: "save", solver, riddles, prizeLetter, prizeMusicUrl, mainMusicUrl, backgroundImageUrl }
+// POST /api/riddles { action: "save", solver, riddles, prizeLetter, prizeMusicPath, mainMusicPath, backgroundImagePath }
+// Authorization: Only creators can save riddles, and only for their own solvers
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { action } = body;
-
-  if (action === "save") {
-    const {
-      solver,
-      riddles,
-      prizeLetter,
-      prizeMusicPath,
-      mainMusicPath,
-      backgroundImagePath,
-      createdBy,
-    } = body;
-
-    if (!solver)
+  try {
+    // Authenticate user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
       return NextResponse.json(
-        { success: false, message: "Solver required" },
-        { status: 400 },
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
       );
+    }
 
-    // Store URLs directly in database (or empty string if not provided)
-    const prizeMusic = prizeMusicPath || "";
-    const mainMusic = mainMusicPath || "";
-    const backgroundImage = backgroundImagePath || "";
+    // Only creators can save riddles
+    if (user.role !== "creator") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Forbidden: only creators can save riddles",
+        },
+        { status: 403 },
+      );
+    }
 
-    try {
-      // Find existing RiddleSet
-      const existingSet = await prisma.riddleSet.findFirst({
-        where: { solver },
-        include: { prize: true },
+    const body = await req.json();
+    const { action } = body;
+
+    if (action === "save") {
+      const {
+        solver: solverUsername,
+        riddles,
+        prizeLetter,
+        prizeMusicPath,
+        mainMusicPath,
+        backgroundImagePath,
+      } = body;
+
+      if (!solverUsername) {
+        return NextResponse.json(
+          { success: false, message: "solver username required" },
+          { status: 400 },
+        );
+      }
+
+      // Get creator from authenticated session
+      const creatorId = user.id;
+
+      // Find solver by username AND creatorId (multi-tenant isolation)
+      const solverUser = await prisma.user.findFirst({
+        where: {
+          username: solverUsername,
+          role: "solver",
+          creatorId: creatorId,
+        },
       });
 
-      // Delete old files if they're being replaced
-      if (existingSet) {
-        // Delete old mainMusic if it's changing
-        if (
-          existingSet.mainMusic &&
-          existingSet.mainMusic !== mainMusic &&
-          mainMusic
-        ) {
-          await deleteFileFromSupabase(existingSet.mainMusic);
-        }
-
-        // Delete old prize files if they're changing
-        if (existingSet.prize) {
-          if (
-            existingSet.prize.music &&
-            existingSet.prize.music !== prizeMusic &&
-            prizeMusic
-          ) {
-            await deleteFileFromSupabase(existingSet.prize.music);
-          }
-          if (
-            existingSet.prize.backgroundImage &&
-            existingSet.prize.backgroundImage !== backgroundImage &&
-            backgroundImage
-          ) {
-            await deleteFileFromSupabase(existingSet.prize.backgroundImage);
-          }
-        }
+      if (!solverUser) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Solver not found or doesn't belong to you",
+          },
+          { status: 404 },
+        );
       }
+
+      const solverId = solverUser.id;
+
+      // Store URLs directly in database (or empty string if not provided)
+      const prizeMusic = prizeMusicPath || "";
+      const mainMusic = mainMusicPath || "";
+      const backgroundImage = backgroundImagePath || "";
+
+      // Find existing RiddleSet
+      const existingSet = await prisma.riddleSet.findFirst({
+        where: { solverId },
+      });
+
+      const riddlesData: RiddleInput[] = (riddles || []).map(
+        (r: RiddleInput) => ({
+          question: r.question,
+          answer: r.answer,
+        }),
+      );
 
       if (existingSet) {
         // Delete existing riddles and prize
@@ -141,10 +272,7 @@ export async function POST(req: Request) {
           data: {
             mainMusic: mainMusic,
             riddles: {
-              create: (riddles || []).map((r: any) => ({
-                question: r.question,
-                answer: r.answer,
-              })),
+              create: riddlesData,
             },
             prize: {
               create: {
@@ -159,14 +287,11 @@ export async function POST(req: Request) {
         // Create new RiddleSet
         await prisma.riddleSet.create({
           data: {
-            solver,
-            createdBy: createdBy || "unknown",
+            solverId,
+            creatorId,
             mainMusic: mainMusic,
             riddles: {
-              create: (riddles || []).map((r: any) => ({
-                question: r.question,
-                answer: r.answer,
-              })),
+              create: riddlesData,
             },
             prize: {
               create: {
@@ -180,19 +305,19 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({ success: true });
-    } catch (error) {
-      console.error("Error saving riddles:", error);
-      return NextResponse.json(
-        { success: false, message: "Error saving riddles" },
-        { status: 500 },
-      );
     }
-  }
 
-  return NextResponse.json(
-    { success: false, message: "Unknown action" },
-    { status: 400 },
-  );
+    return NextResponse.json(
+      { success: false, message: "Unknown action" },
+      { status: 400 },
+    );
+  } catch (error) {
+    console.error("Error saving riddles:", error);
+    return NextResponse.json(
+      { success: false, message: "Error saving riddles" },
+      { status: 500 },
+    );
+  }
 }
 
 // DELETE /api/riddles?solver=username - Delete riddle set and all associated files

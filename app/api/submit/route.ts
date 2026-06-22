@@ -1,40 +1,77 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { getSessionToken } from "@/lib/auth/cookies";
+import { validateSession } from "@/lib/auth/session";
 
-const prisma = new PrismaClient();
+interface Prize {
+  id: string;
+  setId: string;
+  letter: string;
+  music: string | null;
+  backgroundImage: string | null;
+  createdAt: Date;
+}
 
-// POST /api/submit { solver, answers }
+// Helper to get authenticated user
+async function getAuthenticatedUser(req: Request) {
+  const token = getSessionToken(req);
+  if (!token) return null;
+  return validateSession(token);
+}
+
+// POST /api/submit { answers }
+// Authorization: Only solvers can submit, and only for their own riddles
+// Identity comes from session, NOT from body
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { solver, answers } = body;
-
-  if (!solver)
-    return NextResponse.json(
-      { success: false, message: "Solver required" },
-      { status: 400 },
-    );
-
-  if (!Array.isArray(answers))
-    return NextResponse.json(
-      { success: false, message: "Answers required" },
-      { status: 400 },
-    );
-
   try {
+    // Authenticate user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    // Only solvers can submit answers
+    if (user.role !== "solver") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Forbidden: only solvers can submit answers",
+        },
+        { status: 403 },
+      );
+    }
+
+    const body = await req.json();
+    const { answers } = body;
+
+    if (!Array.isArray(answers)) {
+      return NextResponse.json(
+        { success: false, message: "Answers required" },
+        { status: 400 },
+      );
+    }
+
+    // Use authenticated user's ID directly - no username lookup needed
+    const solverId = user.id;
+
     const riddleSet = await prisma.riddleSet.findFirst({
-      where: { solver },
+      where: { solverId },
       include: {
         riddles: true,
         prize: true,
       },
     });
 
-    if (!riddleSet)
+    if (!riddleSet) {
       return NextResponse.json(
-        { success: false, message: "No riddles for this solver" },
+        { success: false, message: "No riddles found for your account" },
         { status: 404 },
       );
+    }
 
     const riddles = riddleSet.riddles || [];
     const total = riddles.length;
@@ -51,30 +88,38 @@ export async function POST(req: Request) {
     }
 
     if (correctCount === total) {
-      const supabase = createClient();
-      const prize = riddleSet.prize || {};
-      if ((prize as any).music) {
+      const supabase = await createClient();
+      const prize: Prize = riddleSet.prize || {
+        id: "",
+        setId: riddleSet.id,
+        letter: "",
+        music: null,
+        backgroundImage: null,
+        createdAt: new Date(),
+      };
+
+      if (prize.music) {
         try {
           const { data } = await supabase.storage
             .from("uploads")
-            .createSignedUrl((prize as any).music, 3600);
-          ////////////////////////////////////////////////////////////////////////
-          (prize as any).music = data?.signedUrl || (prize as any).music;
+            .createSignedUrl(prize.music, 3600);
+          prize.music = data?.signedUrl || prize.music;
         } catch (e) {
           console.error("Error generating signed URL for prize music:", e);
         }
       }
-      if ((prize as any).backgroundImage) {
+
+      if (prize.backgroundImage) {
         try {
           const { data } = await supabase.storage
             .from("uploads")
-            .createSignedUrl((prize as any).backgroundImage, 3600);
-          (prize as any).backgroundImage =
-            data?.signedUrl || (prize as any).backgroundImage;
+            .createSignedUrl(prize.backgroundImage, 3600);
+          prize.backgroundImage = data?.signedUrl || prize.backgroundImage;
         } catch (e) {
           console.error("Error generating signed URL for background image:", e);
         }
       }
+
       return NextResponse.json({
         success: true,
         prize,

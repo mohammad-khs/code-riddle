@@ -4,9 +4,9 @@ import { FC } from "react";
 const Logo: FC = () => (
   <Link
     href="/"
-    className="font-bold text-lg text-slate-900 dark:text-slate-100 hover:opacity-80 transition"
+    className="font-extrabold text-xl tracking-tight text-slate-50 hover:opacity-80 transition-opacity"
   >
-    CodeRiddle
+    Code<span className="text-blue-500">Riddle</span>
   </Link>
 );
 

@@ -2,31 +2,49 @@
 
 @layer base {
   :root {
-    --app-bg: #ffffff;
-    --app-foreground: #0f1724;
-  }
-  @media (prefers-color-scheme: dark) {
-    /* softer dark background (not pitch-black) */
-    :root {
-      --app-bg: #0f1724; /* slate-900-ish */
-      --app-foreground: #e6eef8;
-    }
+    /* -------------------------------------------------------------------------- */
+    /* COLOR PALETTE: NAVY & DARK BLUE THEME                                      */
+    /* -------------------------------------------------------------------------- */
+
+    /* Backgrounds */
+    --app-bg: #020617; /* slate-950: پس‌زمینه اصلی سایت (سورمه‌ای بسیار تاریک) */
+    --app-surface: #0f172a; /* slate-900: پس‌زمینه کارت‌ها، پنل‌ها و بخش‌های متمایز */
+    --app-surface-hover: #1e293b; /* slate-800: هاور کارت‌ها و پس‌زمینه دکمه‌های ثانویه */
+
+    /* Borders & Lines */
+    --app-border: #1e293b; /* slate-800: خطوط جداکننده و بردرهای ملایم */
+    --app-border-active: #334155; /* slate-700: بردر در حالت فوکوس یا هاور */
+
+    /* Typography */
+    --app-foreground: #f8fafc; /* slate-50: رنگ متن اصلی (سفید یخی، خواناتر از سفید خالص) */
+    --app-muted: #94a3b8; /* slate-400: رنگ متن‌های توضیحی و زیرنویس‌ها */
+
+    /* Brand Accents (Call to Actions & Highlights) */
+    --app-primary: #3b82f6; /* blue-500: رنگ اصلی اکشن‌ها (دکمه‌های مهم، لینک‌ها) */
+    --app-primary-hover: #2563eb; /* blue-600: هاور رنگ اصلی */
+
+    --app-accent: #0ea5e9; /* sky-500: رنگ مکمل برای گرادیانت‌ها و تنوع بصری */
+
+    /* Premium / Conversion Elements */
+    --app-premium: #f59e0b; /* amber-500: رنگ طلایی برای بخش پولی و ایجاد حس ارزشمندی */
+    --app-premium-hover: #d97706; /* amber-600: هاور رنگ طلایی */
   }
 
   body {
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
     background-color: var(--app-bg);
     color: var(--app-foreground);
+    scroll-behavior: smooth;
   }
 }
-
-/* @theme{
-
-
-  --color-frzn-blue: #3b82f6;
-
-} */
 
 @media (max-width: 520px) {
   .nav-row {
@@ -56,19 +74,19 @@
 /* Scrollbar */
 @media (hover: hover) {
   ::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 50px;
+    background: #334155;
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #555;
-    cursor: grab;
-  }
-  ::-webkit-scrollbar-thumb:active {
-    cursor: grabbing;
+    background: #475569;
   }
 }

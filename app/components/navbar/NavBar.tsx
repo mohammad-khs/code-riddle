@@ -1,63 +1,49 @@
 "use client";
 
 import { FC, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import HamburgerButton from "./HamburgerButton";
 import DesktopNavLinks from "./DesktopNavLinks";
 import MobileNavMenu from "./MobileNavMenu";
 
-interface NavBarProps {
-  isPrize: boolean;
-}
-
-const NavBar: FC<NavBarProps> = ({ isPrize = false }) => {
+const NavBar: FC = () => {
   const [user, setUser] = useState<{
     username: string;
     userType: string;
   } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const username = localStorage.getItem("username");
-    const userType = localStorage.getItem("userType");
-    if (username && userType) {
-      setUser({ username, userType });
-    } else {
-      setUser(null);
-    }
+    fetch("/api/auth/validate")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.valid && data.user) {
+          setUser({ username: data.user.username, userType: data.user.role });
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => {
+        setUser(null);
+      });
   }, [pathname]);
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("userType");
-    setUser(null);
-    setIsMenuOpen(false);
-    router.push("/");
-  };
 
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="dark:bg-black/35 px-6 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
-      <div className="max-w-[1080px] mx-auto md:px-0 flex items-center justify-between py-3">
+    <nav className="absolute top-0 left-0 right-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-lg">
+      <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-4">
         <Logo />
         <HamburgerButton
           isOpen={isMenuOpen}
           onToggle={() => setIsMenuOpen((prev) => !prev)}
         />
-        <DesktopNavLinks user={user} onLogout={logout} />
+        <DesktopNavLinks user={user} />
       </div>
 
-      <MobileNavMenu
-        isOpen={isMenuOpen}
-        user={user}
-        onLogout={logout}
-        onClose={closeMenu}
-      />
+      <MobileNavMenu isOpen={isMenuOpen} user={user} onClose={closeMenu} />
     </nav>
   );
 };

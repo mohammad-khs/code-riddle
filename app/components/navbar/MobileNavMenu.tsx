@@ -1,61 +1,105 @@
+"use client";
+
 import Link from "next/link";
 import { FC } from "react";
+import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 interface MobileNavMenuProps {
   isOpen: boolean;
   user: { username: string; userType: string } | null;
-  onLogout: () => void;
   onClose: () => void;
 }
 
-const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onLogout, onClose }) => {
+const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onClose }) => {
+  const pathname = usePathname();
+
   if (!isOpen) return null;
 
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
+  const linkClass = (href: string) =>
+    `block py-2 transition-colors ${
+      isActive(href) ? "text-blue-400" : "hover:text-blue-400"
+    }`;
+
+  async function handleLogout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
+    window.location.href = "/";
+  }
+
   return (
-    <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/95 absolute inset-x-0 top-full z-40 shadow-lg">
-      <nav className="max-w-[980px] mx-auto px-6 flex flex-col gap-3 text-sm text-slate-700 dark:text-slate-200 py-4">
+    <div className="absolute inset-x-0 top-full z-40 border-t border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur-xl md:hidden">
+      <nav className="mx-auto flex max-w-[1080px] flex-col gap-2 px-6 py-6 text-sm font-medium text-slate-300">
         {!user ? (
           <>
-            <Link href="/creator/register" className="hover:underline block py-2" onClick={onClose}>
+            <Link
+              href="/creator/register"
+              className={linkClass("/creator/register")}
+              onClick={onClose}
+            >
               Creator Register
             </Link>
-            <Link href="/creator/login" className="hover:underline block py-2" onClick={onClose}>
+            <Link
+              href="/creator/login"
+              className={linkClass("/creator/login")}
+              onClick={onClose}
+            >
               Creator Login
             </Link>
-            <div className="border-t border-gray-200 dark:border-slate-600 my-3" />
-            <Link href="/solver/login" className="hover:underline block py-2" onClick={onClose}>
+            <div className="my-2 border-t border-slate-800" />
+            <Link
+              href="/solver/login"
+              className={linkClass("/solver/login")}
+              onClick={onClose}
+            >
               Solver Login
             </Link>
           </>
         ) : user.userType === "creator" ? (
           <>
-            <Link href="/creator/dashboard" className="hover:underline block py-2" onClick={onClose}>
+            <Link
+              href="/creator/dashboard"
+              className={linkClass("/creator/dashboard")}
+              onClick={onClose}
+            >
               Dashboard
-            </Link>
-            <Link href="/creator/register-solver" className="hover:underline block py-2" onClick={onClose}>
-              Register Solver
             </Link>
           </>
         ) : (
-          <Link href="/solver/solve" className="hover:underline block py-2" onClick={onClose}>
+          <Link
+            href="/solver/solve"
+            className={linkClass("/solver/solve")}
+            onClick={onClose}
+          >
             Solve
           </Link>
         )}
 
         {user && (
           <>
-            <div className="border-t border-gray-200 dark:border-slate-600 my-3" />
-            <div className="py-2">
-              <div className="font-medium text-slate-900 dark:text-slate-100">{user.username}</div>
-              <div className="text-xs text-slate-600 dark:text-slate-400 capitalize">{user.userType}</div>
+            <div className="my-4 border-t border-slate-800" />
+            <div className="mb-2 py-2">
+              <div className="font-medium text-slate-50">{user.username}</div>
+              <div className="mt-1 text-xs capitalize text-blue-400">
+                {user.userType}
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="text-xs bg-red-500 hover:bg-red-600 focus:bg-red-600 text-white px-3 py-2 rounded w-full transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Logout
-            </button>
+            {user?.userType === "solver" && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/35 px-4 py-2 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-600/10 hover:text-rose-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </button>
+            )}
           </>
         )}
       </nav>

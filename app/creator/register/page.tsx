@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/ui/form/AuthForm";
 
@@ -10,7 +10,7 @@ export default function CreatorRegister() {
   const [msg, setMsg] = useState("");
   const router = useRouter();
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMsg("");
 
@@ -28,10 +28,22 @@ export default function CreatorRegister() {
     const j = await res.json();
 
     if (j.success) {
-      localStorage.setItem("token", j.token || "");
-      localStorage.setItem("userType", "creator");
-      localStorage.setItem("username", username);
-      router.push("/creator/dashboard");
+      const loginRes = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "login",
+          username,
+          password,
+          userType: "creator",
+        }),
+      });
+      const loginData = await loginRes.json();
+      if (loginData.success) {
+        router.push("/creator/dashboard/manage-solver");
+      } else {
+        router.push("/creator/login");
+      }
     } else {
       setMsg(j.message || "Error");
     }
@@ -46,7 +58,6 @@ export default function CreatorRegister() {
       setPassword={setPassword}
       onSubmit={handleSubmit}
       buttonText="Register"
-      buttonColor="sky"
       message={msg}
     />
   );

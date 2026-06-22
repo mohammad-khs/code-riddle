@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/ui/form/AuthForm";
 
@@ -11,7 +11,7 @@ export default function CreatorLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
     setMsg("");
@@ -30,10 +30,7 @@ export default function CreatorLogin() {
     const j = await res.json();
 
     if (j.success) {
-      localStorage.setItem("token", j.token || "");
-      localStorage.setItem("userType", "creator");
-      localStorage.setItem("username", username);
-      router.push("/creator/dashboard");
+      router.push("/creator/dashboard/manage-solver");
     } else {
       setMsg(j.message || "Error");
       setIsLoading(false);
@@ -49,7 +46,6 @@ export default function CreatorLogin() {
       setPassword={setPassword}
       onSubmit={handleSubmit}
       buttonText="Login as Creator"
-      buttonColor="blue"
       message={msg}
       isLoading={isLoading}
     />

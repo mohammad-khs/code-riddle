@@ -1,13 +1,26 @@
 "use client";
-import { PauseIcon, PlayIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import QuestionView from "./QuestionView";
+import ResultView from "./ResultView";
+import { Riddle, Prize } from "@/types/solver-solve";
 
 export default function SolverSolve() {
-  const [riddles, setRiddles] = useState<any[]>([]);
+  // too much useStates in a single component
+  // local storage problem
+  // add an optimized component / function to handle audio
+  // too many useEffects
+  // add a universal fetcher
+  // use next form for database update and auth
+  // not using types correctly
+  // there cannot be main music which is riddle music and no riddles
+  const router = useRouter();
+
+  const [riddles, setRiddles] = useState<Riddle[]>([]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [currentAnswer, setCurrentAnswer] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Prize | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [feedback, setFeedback] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -15,22 +28,83 @@ export default function SolverSolve() {
   const [isMainPlaying, setIsMainPlaying] = useState(false);
   const mainAudioRef = useRef<HTMLAudioElement | null>(null);
   const [answerLoading, setAnswerLoading] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+  const [username, setUsername] = useState("");
+  const [creatorUsername, setCreatorUsername] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get solver username from localStorage
-    const solver =
-      localStorage.getItem("username") || localStorage.getItem("solver") || "";
-    if (!solver) return;
-    fetch(`/api/riddles?solver=${encodeURIComponent(solver)}`)
+    // Validate session with the server
+    fetch("/api/auth/validate")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.valid || data.user.role !== "solver") {
+          router.push("/solver/login");
+          return;
+        }
+        setUsername(data.user.username);
+        // Get creatorUsername from validate response
+        if (data.user.creatorUsername) {
+          setCreatorUsername(data.user.creatorUsername);
+        }
+        setAuthorized(true);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        router.push("/solver/login");
+      });
+  }, [router]);
+
+  const finish = useCallback(
+    async (ans: string[]) => {
+      if (!username || !creatorUsername) return;
+
+      setIsLoading(true);
+
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          solver: username,
+          creatorUsername,
+          answers: ans,
+        }),
+      });
+
+      const j = await res.json();
+
+      if (j.success && j.prize) {
+        setResult(j.prize);
+      }
+
+      setIsLoading(false);
+    },
+    [username, creatorUsername],
+  );
+
+  useEffect(() => {
+    if (!authorized || !username || !creatorUsername) return;
+
+    fetch(
+      `/api/riddles?solver=${encodeURIComponent(username)}&creator=${encodeURIComponent(creatorUsername)}`,
+    )
       .then((r) => r.json())
       .then((d) => {
-        setRiddles(d.riddles || []);
-        setMainMusic(d.mainMusic || "");
-      })
-      .catch(() => {});
-  }, []);
+        const riddleSet = d.riddleSet || {};
+        const riddleList = riddleSet.riddles || [];
 
-  function submitAnswer(e: any) {
+        setRiddles(riddleList);
+        setMainMusic(riddleSet.mainMusic);
+
+        if (riddleList.length === 0) {
+          finish([]);
+        } else {
+          setIsLoading(false);
+        }
+      });
+  }, [authorized, username, creatorUsername, finish]);
+
+  function submitAnswer(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFeedback("");
     setAnswerLoading(true);
@@ -42,7 +116,7 @@ export default function SolverSolve() {
       .trim()
       .toLowerCase();
     if (userAnswer === "") {
-      setFeedback("✗ چیزی ننوشتی ");
+      setFeedback("✗ You wrote nothing");
       setAnswerLoading(false);
       return;
     }
@@ -52,7 +126,7 @@ export default function SolverSolve() {
       nextAnswers[index] = currentAnswer;
       setAnswers(nextAnswers);
       setCurrentAnswer("");
-      setFeedback("✓ درسته");
+      setFeedback("✓ Correct");
 
       // Move to next riddle or finish
       setTimeout(() => {
@@ -67,22 +141,9 @@ export default function SolverSolve() {
       }, 800);
     } else {
       // Answer is incorrect
-      setFeedback("✗ اشتباس، دوباره امتحان کن.");
+      setFeedback("✗ Wrong, try again.");
       setAnswerLoading(false);
     }
-  }
-
-  async function finish(ans: string[]) {
-    const solver =
-      localStorage.getItem("username") || localStorage.getItem("solver") || "";
-    if (!solver) return;
-    const res = await fetch("/api/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ solver, answers: ans }),
-    });
-    const j = await res.json();
-    setResult(j);
   }
 
   useEffect(() => {
@@ -94,36 +155,39 @@ export default function SolverSolve() {
         const p = mainAudioRef.current.play();
         if (p && typeof p.then === "function") {
           p.then(() => setIsMainPlaying(true)).catch(() =>
-            setIsMainPlaying(false)
+            setIsMainPlaying(false),
           );
         }
       } catch (e) {
+        console.error(e);
         // ignore autoplay errors
       }
     }
   }, [mainMusic]);
 
   useEffect(() => {
-    // when prize arrives and has music, try to autoplay and pause main music
-    if (result && result.success && result.prize && result.prize.music) {
-      try {
-        if (mainAudioRef.current && isMainPlaying) {
-          mainAudioRef.current.pause();
-          setIsMainPlaying(false);
-        }
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.src = result.prize.music;
-          const p = audioRef.current.play();
-          if (p && typeof p.then === "function") {
-            p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-          }
-        }
-      } catch (e) {
-        // ignore autoplay errors
+    if (!result?.music) return;
+
+    try {
+      // Pause main music without checking state
+      if (mainAudioRef.current) {
+        mainAudioRef.current.pause();
       }
+
+      // Play prize music
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = result.music;
+
+        const p = audioRef.current.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        }
+      }
+    } catch (e) {
+      console.error(e);
     }
-  }, [result, isMainPlaying]);
+  }, [result]);
 
   function togglePlay() {
     if (!audioRef.current) return;
@@ -151,124 +215,37 @@ export default function SolverSolve() {
     }
   }
 
-  if (result && result.success) {
+  if (isLoading || !riddles || riddles.length === 0) {
     return (
-      <div
-        style={
-          result.prize.backgroundImage
-            ? {
-                backgroundImage: `url(${result.prize.backgroundImage})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : {}
-        }
-        className="h-svh flex justify-center items-center fixed top-0 left-0 w-full"
-      >
-        <section className="max-w-3xl mx-6 sm:mx-auto overflow-y-scroll h-[500px] bg-black/30 backdrop-blur-sm dark:border-slate-700 rounded-lg p-6">
-          <div
-            dir="rtl"
-            className="whitespace-pre-wrap text-slate-700 dark:text-slate-200 text-lg"
-          >
-            {result.prize.letter}
-          </div>
-        </section>
-
-        {/* hidden audio element - controls hidden */}
-        {result.prize.music && (
-          <audio ref={audioRef} src={result.prize.music} className="hidden" />
-        )}
-
-        {/* floating play/pause control at bottom-right */}
-        {result.prize.music && (
-          <div className="fixed right-4 bottom-4 z-50">
-            <button
-              onClick={togglePlay}
-              className="flex items-center justify-center w-14 h-14 rounded-full bg-black/30 backdrop-blur-sm shadow"
-            >
-              <span className="sr-only">
-                {isPlaying ? "Pause music" : "Play music"}
-              </span>
-              {isPlaying ? (
-                <PauseIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-              ) : (
-                <PlayIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-              )}
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (!riddles || riddles.length === 0) {
-    return (
-      <div dir="rtl" className="max-w-3xl mx-auto p-6 text-center text-2xl">
-        صبر کن 😊
+      <div className="flex min-h-dvh w-full max-w-[1080px] items-center justify-center px-6">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 text-center text-xl text-slate-300 backdrop-blur-xl">
+          Loading riddles...
+        </div>
       </div>
     );
   }
 
   const item = riddles[index];
 
+  if (result) {
+    return <ResultView prize={result} isPlaying={isPlaying} onTogglePlay={togglePlay} />;
+  }
+
   return (
-    <div className="relative" dir="rtl">
-      <section className="max-w-3xl mx-auto bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-slate-100">
-          سوال {index + 1}
-        </h2>
-        <div className="mb-4 text-slate-700 dark:text-slate-200">
-          {item.question}
-        </div>
-        <form onSubmit={submitAnswer} className="space-y-3">
-          <input
-            value={currentAnswer}
-            onChange={(e) => setCurrentAnswer(e.target.value)}
-            placeholder="پاسخ خود را اینجا وارد کنید"
-            disabled={answerLoading}
-            className="mt-1 w-full rounded-md border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 disabled:opacity-50"
-          />
-          <div>
-            <button
-              disabled={answerLoading}
-              className="bg-sky-500 disabled:bg-sky-300/50 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
-            >
-              ثبت پاسخ
-            </button>
-          </div>
-        </form>
-        {feedback && (
-          <div
-            className={`mt-4 text-lg font-semibold ${
-              feedback.startsWith("✓") ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {feedback}
-          </div>
-        )}
-      </section>
-
-      {/* hidden main audio element */}
-      {mainMusic && <audio ref={mainAudioRef} className="hidden" />}
-
-      {/* floating play/pause control for main music at bottom-left */}
-      {mainMusic && (
-        <div className="fixed left-4 bottom-4 z-50">
-          <button
-            onClick={toggleMainPlay}
-            className="flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow"
-          >
-            <span className="sr-only">
-              {isMainPlaying ? "Pause main music" : "Play main music"}
-            </span>
-            {isMainPlaying ? (
-              <PauseIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-            ) : (
-              <PlayIcon className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-            )}
-          </button>
-        </div>
-      )}
-    </div>
+    <>
+      <QuestionView
+        riddle={item}
+        totalRiddles={index + 1}
+        currentAnswer={currentAnswer}
+        feedback={feedback}
+        isLoading={answerLoading}
+        mainMusicPlaying={isMainPlaying}
+        onAnswerChange={setCurrentAnswer}
+        onSubmit={submitAnswer}
+        onToggleMainMusic={toggleMainPlay}
+        mainMusic={mainMusic}
+      />
+      <audio ref={mainAudioRef} className="hidden" />
+    </>
   );
 }
