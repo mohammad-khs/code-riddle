@@ -323,9 +323,9 @@ export async function POST(req: Request) {
 // DELETE /api/riddles?solver=username - Delete riddle set and all associated files
 export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
-  const solver = searchParams.get("solver");
+  const solverUsername = searchParams.get("solver");
 
-  if (!solver)
+  if (!solverUsername)
     return NextResponse.json(
       { success: false, message: "Solver required" },
       { status: 400 },
@@ -333,7 +333,7 @@ export async function DELETE(req: Request) {
 
   try {
     const riddleSet = await prisma.riddleSet.findFirst({
-      where: { solver },
+      where: { solver: { username: solverUsername } },
       include: { prize: true },
     });
 

@@ -9,7 +9,7 @@ export async function deleteFileFromSupabase(
   filePath: string,
 ): Promise<{ success: boolean; message?: string }> {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     if (!filePath) {
       return { success: true }; // No file to delete
