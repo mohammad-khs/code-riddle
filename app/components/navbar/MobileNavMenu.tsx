@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FC } from "react";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 interface MobileNavMenuProps {
   isOpen: boolean;
@@ -22,6 +23,15 @@ const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onClose }) => {
     `block py-2 transition-colors ${
       isActive(href) ? "text-blue-400" : "hover:text-blue-400"
     }`;
+
+  async function handleLogout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
+    window.location.href = "/";
+  }
 
   return (
     <div className="absolute inset-x-0 top-full z-40 border-t border-slate-800 bg-slate-900/95 shadow-2xl backdrop-blur-xl md:hidden">
@@ -80,6 +90,16 @@ const MobileNavMenu: FC<MobileNavMenuProps> = ({ isOpen, user, onClose }) => {
                 {user.userType}
               </div>
             </div>
+            {user?.userType === "solver" && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/35 px-4 py-2 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-600/10 hover:text-rose-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </button>
+            )}
           </>
         )}
       </nav>

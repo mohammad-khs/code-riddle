@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Loader from "@/app/components/ui/Loader";
 import QuestionView from "./QuestionView";
 import ResultView from "./ResultView";
 import { Riddle, Prize } from "@/types/solver-solve";
@@ -216,37 +215,21 @@ export default function SolverSolve() {
     }
   }
 
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (result?.letter || result?.music || result?.backgroundImage) {
+  if (isLoading || !riddles || riddles.length === 0) {
     return (
-      <>
-        <ResultView
-          prize={result}
-          isPlaying={isPlaying}
-          onTogglePlay={togglePlay}
-        />
-        {result.music && (
-          <audio ref={audioRef} src={result.music} className="hidden" />
-        )}
-      </>
-    );
-  }
-
-  if (!riddles || riddles.length === 0) {
-    return (
-      <div
-        dir="rtl"
-        className="flex items-center justify-center max-w-3xl mx-auto p-6 text-center text-2xl"
-      >
-        Wait a moment 😊
+      <div className="flex min-h-dvh w-full max-w-[1080px] items-center justify-center px-6">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 text-center text-xl text-slate-300 backdrop-blur-xl">
+          Loading riddles...
+        </div>
       </div>
     );
   }
 
   const item = riddles[index];
+
+  if (result) {
+    return <ResultView prize={result} isPlaying={isPlaying} onTogglePlay={togglePlay} />;
+  }
 
   return (
     <>
@@ -262,7 +245,7 @@ export default function SolverSolve() {
         onToggleMainMusic={toggleMainPlay}
         mainMusic={mainMusic}
       />
-      {mainMusic && <audio ref={mainAudioRef} className="hidden" />}
+      <audio ref={mainAudioRef} className="hidden" />
     </>
   );
 }

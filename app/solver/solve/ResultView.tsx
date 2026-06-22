@@ -21,28 +21,38 @@ export default function ResultView({
     : {};
 
   return (
-    <div
-      style={backgroundStyle}
-      className="h-svh flex justify-center items-center fixed top-0 left-0 w-full"
-    >
-      {prize.letter && (
-        <section className="max-w-3xl mx-6 sm:mx-auto overflow-y-scroll h-[500px] bg-black/30 backdrop-blur-sm dark:border-slate-700 rounded-lg p-6">
-          <div
-            dir="rtl"
-            className="whitespace-pre-wrap wrap-break-word text-slate-700 dark:text-slate-200 text-lg"
-          >
-            {prize.letter}
-          </div>
+    <>
+      <div
+        style={backgroundStyle}
+        className="flex h-dvh w-full max-w-[1080px] items-center justify-center bg-slate-950/95"
+      >
+        <section className="w-full max-w-2xl rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
+          <header className="border-b border-slate-800 pb-4 mb-6">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400">
+              Congratulations
+            </p>
+            <h2 className="mt-1 text-2xl font-extrabold text-slate-50">
+              You Solved It!
+            </h2>
+          </header>
+
+          {prize.letter && (
+            <div className="max-h-[400px] overflow-y-auto">
+              <p className="whitespace-pre-wrap text-slate-300 text-lg leading-relaxed">
+                {prize.letter}
+              </p>
+            </div>
+          )}
         </section>
-      )}
+      </div>
 
       {prize.music && (
         <MusicControlButton
           isPlaying={isPlaying}
           onToggle={onTogglePlay}
-          label={isPlaying ? "Pause music" : "Play music"}
+          label={isPlaying ? "Pause prize music" : "Play prize music"}
         />
       )}
-    </div>
+    </>
   );
 }
